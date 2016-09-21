@@ -1,0 +1,298 @@
+# Data-structure
+data   structure
+#pragma once
+
+#include"Vector.h"
+
+template<class T>
+class Vector
+{
+public:
+
+    typedef T* Iterator ;
+         typedef const T* ConstIterator;
+         Vector()
+                :_start(0)
+                ,_finish (0)
+                ,_End_of_storage (0)
+        {}
+
+
+         //考虑三个问题
+         //深浅拷贝问题，类型萃取问题，设计方案；
+         Vector(Vector <T>& v)
+                :_start( new T [v.size ()])
+                ,_finish (_start+ v.size ())
+                ,_End_of_storage (_finish)
+        {
+                 if(TypeTraits <T>::__IsPODType().Get())
+                        memcpy(_start, v._start ,v.size ()*sizeof( T));
+                 else
+                {
+                         for(int i = 0; i < size(); i++)
+                                        _start[i] = v._start[i];
+                }
+        }
+
+
+        ~vector()
+        {
+                 if(_start)
+                         delete[] _start;
+        }
+
+         Iterator end ()
+        {
+                 return _finish ;
+        }
+
+         ConstIterator end () const
+        {
+                 return _finish ;
+        }
+
+         ConstIterator begin () const
+        {
+                 return _start;
+        }
+
+         Iterator begin ()
+        {
+                 return _start;
+        }
+
+         void push_back (const T& x )
+        {
+                 /*check_capacity ();
+
+                *_finash++ = x; */
+
+                 insert(end (),x);
+        }
+
+         void pop_back ()
+        {
+                 /*finish;*/
+                 Erase(end ());
+        }
+
+         void insert (Iterator pos, const T& x)
+        {
+                
+                 assert(pos >= _start);
+                 assert(pos <= _finish );
+
+                 if(pos == _finish)
+                {
+                         check_capacity ();
+                        *(_finish++) = x;
+                }
+                 else
+                {
+                         check_capacity ();
+                         Iterator tmp = _finish;
+                         while(tmp != pos )
+                        {
+                                *tmp = *(tmp-1);
+                                tmp--;
+                        }
+                        * pos = x ;
+                        ++_finish;
+                }
+                
+        }
+
+         void Erase (Iterator pos)
+        {
+                 assert(pos > _start);
+                 assert(pos <= _finish );
+
+                 if(pos == _finish )
+                {}
+                 else
+                {
+                         Iterator tmp = pos ;
+                         while(tmp+1 != _finish )
+                        {
+                                *tmp = *(tmp+1);
+                                tmp++;
+                        }
+                }
+                --_finish;
+        }
+
+         size_t size ()
+        {
+                 return _finish - _start;
+        }
+
+         T& operator[] (size_t index)
+        {
+                 return *(_start+index );
+        }
+
+protected:
+         void check_capacity ()
+        {
+                 if(_End_of_storage == _finish)
+                {
+                         size_t Size = size ();
+                         size_t NewCapacity = size ()*2 + 3;
+                         Iterator tmp = new T[NewCapacity];
+
+                         if(TypeTraits <T>::__IsPODType().Get())
+                        {
+                                memcpy(tmp,_start, size()*sizeof (T));
+                        }
+                         else
+                        {
+                                 for(int i = 0; i < size(); i++)
+                                        tmp[i] = _start[i];
+                        }
+
+                         delete[] _start;
+                        _start = tmp;
+
+                         /*if(_finish == 0)
+                                _finish = _start+1;*/
+
+                        _finish = (_start + Size);
+                        _End_of_storage = _start + NewCapacity;
+                }
+        }
+
+private:
+         Iterator _start;
+         Iterator _finish;
+         Iterator _End_of_storage;
+};
+
+
+int main()
+{
+         Vector<int > v;
+
+        v. push_back (0);
+        v. push_back (2);
+        v. push_back (3);
+        v. push_back (4);
+         //v.insert (&v[5],1);
+        v. Erase (&v[4]);
+
+         Vector<int >::Iterator it = v. begin ();
+        
+         while(it != v.end ())
+        {
+                 cout<<*it<<" " ;
+                it++;
+        }
+         cout<<endl;
+
+        system( "pause");
+         return 0;
+}
+
+//类型萃取的头文件
+
+#pragma once
+
+#include<iostream>
+#include<vector>
+#include<cassert>
+
+using namespace std;
+
+struct __TrueType
+{
+bool Get ()
+{
+return true ;
+}
+};
+struct __FalseType
+{
+bool Get ()
+{
+return false ;
+}
+};
+template <class _Tp>
+struct TypeTraits
+{
+typedef __FalseType __IsPODType;
+};
+template <>
+struct TypeTraits < bool>
+{
+typedef __TrueType __IsPODType;
+};
+template <>
+struct TypeTraits < char>
+{
+typedef __TrueType __IsPODType;
+};
+template <>
+struct TypeTraits < unsigned char >
+{
+typedef __TrueType __IsPODType;
+};
+template <>
+struct TypeTraits < short>
+{
+typedef __TrueType __IsPODType;
+};
+template <>
+struct TypeTraits < unsigned short >
+{
+typedef __TrueType __IsPODType;
+};
+template <>
+struct TypeTraits < int>
+{
+typedef __TrueType __IsPODType;
+};
+template <>
+struct TypeTraits < unsigned int >
+{
+typedef __TrueType __IsPODType;
+};
+template <>
+struct TypeTraits < long>
+{
+typedef __TrueType __IsPODType;
+};
+template <>
+struct TypeTraits < unsigned long >
+{
+typedef __TrueType __IsPODType;
+};
+template <>
+struct TypeTraits < long long >
+{
+typedef __TrueType __IsPODType;
+};
+template <>
+struct TypeTraits < unsigned long long >
+{
+typedef __TrueType __IsPODType;
+};
+template <>
+struct TypeTraits < float>
+{
+typedef __TrueType __IsPODType;
+};
+template <>
+struct TypeTraits < double>
+{
+typedef __TrueType __IsPODType;
+};
+template <>
+struct TypeTraits < long double >
+{
+typedef __TrueType __IsPODType;
+};
+template <class _Tp>
+struct TypeTraits < _Tp*>
+{
+typedef __TrueType __IsPODType;
+};
