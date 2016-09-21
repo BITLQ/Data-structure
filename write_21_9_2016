@@ -1,0 +1,224 @@
+# Data-structure
+data   structure
+
+// 模拟实现stl中的list
+
+#include<iostream>
+#include<cassert>
+
+using namespace std;
+ 
+//链表结点
+template<class T>
+struct _ListNode  
+{
+	_ListNode* _prev;
+	_ListNode* _next;
+	/*void* _prev;
+	void* _next;*/
+
+	T _data;
+
+	_ListNode(){}
+	_ListNode(const T& x)
+		:_data(x)
+		,_prev (0)
+		,_next(0)
+	{}
+};
+
+
+//链表的迭代器
+template<class T, class Ref, class Ptr>
+class _ListIerator    
+{
+public:
+	typedef _ListIerator< T,  T&,  T*>  Iterator;
+	typedef _ListIerator<T, const T&, const T*> ConstIterator;   //const 迭代器
+    typedef _ListIerator<T, Ref, Ptr>  Sef;
+
+	typedef _ListNode<T>* LinkType;
+
+	//三个构造函数
+	_ListIerator()	{}
+	_ListIerator(LinkType node):_node(node){}
+	_ListIerator(const Iterator& x):_node(x._node ){}
+
+	//运算符的重载
+	
+	//注意这里使用const修饰函数；
+	bool operator==(const Sef& x) const {return _node == x._node; }
+	bool operator!=(const Sef& x) const {return _node != x._node; }
+	T& operator*()const {return (*_node)._data; }          
+	Ptr operator->() const {return &(operator*());}
+
+	//前置后置++/--的重载  注意分清前后
+	Sef& operator++()  //前置
+	{
+		//_node = _node->_next;   
+		_node = (LinkType) ((*_node)._next) ;/*俩种方式有什么区别*/
+		return *this;
+	}
+
+	Sef operator++(int)
+	{
+		Sef tmp = *this;
+		++*this;          //注意利用已经写好的前置++；
+		return tmp;
+	}
+
+	Sef& operator--()          //前置--
+	{
+		//_node = _node->prev;
+		_node = (LinkType)(*_node)._prev ;
+		return *this;
+	}
+
+	Sef operator--(int)
+	{
+		Sef tmp = *this;
+		--*this;
+		return tmp;
+	}
+
+	LinkType _node;    //成员
+};
+
+
+//链表类
+template<class T>
+class List
+{
+public:
+	typedef _ListIerator<T, T&, T*> Iterator;
+    typedef _ListIerator<T, const T&, const T*> ConstIterator;
+	typedef _ListNode <T> LinkNode;
+	typedef LinkNode* LinkType;
+
+public:
+
+	//初始化结点
+	void InitNode()
+	{
+		//双向循环链表
+		_node = new LinkNode();
+		_node->_prev = _node;
+		_node->_next = _node;
+	}
+
+    //成员函数
+	List():_size(0){InitNode ();}
+
+	~List()
+	{
+		while((_size >0))
+		{
+			LinkType tmp = _node;
+			_node = _node->_next ;
+			delete tmp;
+			_size--;
+		}
+
+		delete _node;
+	}
+
+	Iterator end(){return _node;}
+	ConstIterator end()const {return _node ;}
+	Iterator begin(){return (LinkType)(*_node)._next ;}
+	ConstIterator begin() const {return (LinkType)(*_node)._next ;}
+
+
+	//判空
+	bool Empty() const {return _node == _node->_next ;}
+	//返回成员数量
+	//size_t size = 0;   //每次调用Insert函数时size++;反之Erase()时 size--;
+	size_t Size() const { return  _size;}
+
+	//指定位置之前插入数据
+	void Insert(Iterator pos, const T& x)
+	{
+		++_size;
+		
+		LinkType cur = pos._node; //当前结点命名为cur
+		LinkType prev = cur->_prev ;//当前结点的前一个结点命名为prve
+
+
+		LinkType tmp = new LinkNode(x); 
+
+		tmp->_prev =  prev;
+		tmp->_next = cur;
+
+		cur->_prev = tmp;
+		prev->_next = tmp;
+	}
+
+	void PushBack(const T& x) 
+	{
+		Insert(end(), x);
+	}
+
+	void PushFront(const T& x)
+	{
+		Insert(begin(),x);
+	}
+
+	void Erase(Iterator pos)
+	{
+		assert(pos != end());
+
+		--_size;
+		LinkType prev = pos._node ->_prev ;
+		LinkType next = pos._node ->_next ;
+
+		prev->_next = next;
+		next->_prev = prev;
+
+		delete pos._node ;
+		pos._node = NULL;
+	}
+
+	void PopBack()
+	{
+		Iterator tmp = end();
+		Erase(--tmp);
+	}
+
+	void PopFront()
+	{
+		Erase(begin());
+	}
+
+private:
+	LinkType _node;   //类成员
+	size_t _size;   //每次调用Insert函数时size++;反之Earse()时 size--;
+};
+
+
+void testList()
+{
+	List<int> l;
+	l.PushBack (1);
+	l.PushBack (2);
+	l.PushBack (3);
+	l.Insert (l.begin (),0);
+	l.PopFront ();
+	l.PopBack ();
+
+	List<int>::Iterator it = l.begin ();
+	while(it != l.end ())
+	{
+		cout<<*it<<" ";
+		it++;
+	}
+	cout<<endl;
+
+	cout<<l.Size () <<endl;
+}
+
+int main()
+{
+	testList();
+
+	system("pause");
+	return 0;
+}
