@@ -1,0 +1,492 @@
+# Data-structure
+data   structure
+
+//稀疏矩阵的快速转置算法
+
+/* 在描述稀疏矩阵的快速转置算法之前，先了解什么是稀疏矩阵和什么是稀疏矩阵的压缩存储；
+
+稀疏矩阵的压缩存储
+
+
+什么是稀疏矩阵？ 
+
+/* 这是大学的以么课《线性代数》学的，不知道大家还记得多少，在老师讲到实现稀疏矩阵的压缩存储的时候，我知记得
+我当时考了75分，其它的就呵呵了-_-!!!  
+
+言归正传，稀疏矩阵，例如：
+--------------
+0 0 2 0 4
+0 0 0 0 0
+0 1 0 3 0
+5 0 6 0 0
+--------------
+上面这个就是稀疏矩阵，仔细观察，好像没什么规律吧，而且，习惯上我们把非 0 数据称为有效数据，在这个矩阵中，明显
+0要比有效数据多不少，这就是我么为什么要对它以上所存储了；  避免浪费嘛！   高效率，低消耗是我们程序员追求的完美！
+
+那么，问题来了，前面我们讲过关于对称矩阵的压缩存储（博客链接），用一维数组存储下三角数据，那么这里该怎么存？
+相信大家都可以第一时间反应过来，把有效数据都拿出来存储不就好了嘛，对，就是这样，那么稀疏矩阵的有效数据是无规律的，
+我们是不是还得把它们的坐标也存储起来，否则是不是找不到了。。。。。这块有一个对象有三个属性都要存起来，我们用什么
+好呢？       结构体，没问题，这里我选择用结构体来存储单独的数据，而vector（顺序表）存储这些结构体，当然，并不是每个
+无效值都是0，我们还需要一个变量来表示我们的无效值，好了，，，框架成形了，，，来实现代码吧！
+
+-------------------------------------------
+
+
+#include<iostream>
+#include<vector>
+
+using namespace std;
+
+
+template<class T>
+struct Triple      //保存数据的结构体
+{
+         size_t _row;
+         size_t _col;
+         T _data;
+
+         Triple(size_t row = 0, size_t col = 0, const T& x = T())
+                :_row( row)
+                ,_col( col)
+                ,_data( x)
+        {}
+};
+
+template<class T>
+class SparseMatrix
+{
+public:
+         SparseMatrix(T * arr, size_t m , size_t n, const T& invalid) //注意传参的含义
+                :_m( m)
+                ,_n( n)
+                ,_invalid( invalid)
+        {
+                将有效数据都存入vector内;
+                 for(size_t i = 0; i < _m; i++)
+                {
+                         for(size_t j = 0; j < _n; j++)
+                        {
+                                 if(arr [i*n + j] != _invalid) //有效数据的判定条件；
+                                {
+                                         Triple<T > tmp(i,j,arr[i* n + j]);
+                                        _martix.push_back(tmp);
+                                }
+                        }
+                }
+        }
+
+         打印稀疏矩阵--就是从压缩存储还原的过程；
+
+         void Display()
+        {
+                 int index = 0;
+
+                 for(size_t i = 0; i < _m; i++)
+                {
+                         for(size_t j = 0; j < _n; j++)
+                        {
+                                 if( index < _martix.size()&& 
+                                        _martix[index]._row == i&&
+                                        _martix[index]._col == j)//判断该位置是否放置有效数据；
+                                {
+                                        cout<<_martix[index++]._data<< " ";
+                                }
+                                 else   //否则该位置放置无效数据
+                                        cout<<_invalid<< " ";
+                        }
+                        cout<<endl;
+                }
+                cout<<endl;
+        }
+
+private:
+        size_t _m;  //矩阵的行数
+         size_t _n;  //矩阵的列数
+         T _invalid; //无效数据
+         vector<Triple <T> > _martix;   //保存数据所有结构体的vector
+};
+
+
+void  testSparseMatrix()
+{
+         int a[6][5] =   //测试用例
+        {{1, 0, 3, 0, 5},
+        {0, 0, 0, 0, 0},
+        {0, 0, 0, 0, 0},
+        {2, 0, 4, 0, 6},
+        {0, 0, 0, 0, 0},
+        {0, 0, 0, 0, 0}};
+
+         SparseMatrix<int >  s((int *)a, 6, 5, 0); //注意类参数是一维数组指针，强制转换；
+
+        s.Display ();
+}
+
+int main()
+{
+        testSparseMatrix();
+
+        system( "pause");
+         return 0;
+}
+
+
+
+
+/*   上面就是稀疏矩阵的压缩存储，了解过之后，我们就来看看稀疏矩阵的转置（注意：先是普通方法）
+
+还是以这个矩阵为例：
+
+0 0 2 0 4
+0 0 0 0 0
+0 1 0 3 0
+5 0 6 0 0
+
+转置就是把一个矩阵的行变成新矩阵的列，同样，列也变成新矩阵的行，上面的矩阵转置为：
+
+0 0 0 5
+0 0 1 0
+2 0 0 6
+0 0 3 0
+4 0 0 0
+
+从四行五列变为五行四列；而我们的稀疏矩阵采用的行优先的压缩存储，压缩存储的顺序表为：
+_martix：2，4，1，3，5，6
+
+// 行优先存储： 一行一行的存储；
+// 列优先存储： 一列一列的存储；
+  
+而转置之后的矩阵也是按照行优先的压缩存储，，是不是刚好是原矩阵的列优先存储；
+_martix2：5，1，2，6，3，4
+
+现在的问题是怎样把原矩阵的压缩存储变为转置矩阵的压缩存储？
+
+这里有两种方法，我们先来看第一种：number one
+
+时刻记住目的便是将原矩阵的行优先存储变为列优先存储，那么过程就很简单了，压缩数组里的每一个
+元素（结构体）都保存有自己的下标，那先开辟一个和压缩数组大小同样的容器，然后遍历这个数组，
+第一次找出第0列的元素依次存入新的容器，交换容器内新元素的下标（转置之后行和列与原先是相反的）
+接着第二次等等；直到新数组满，过程如下：
+
+_martix：2，4，1，3，5，6;（原压缩数组）
+_martix2:                ;(新压缩数组)
+
+对照着原矩阵比较好找：
+0 0 2 0 4
+0 0 0 0 0
+0 1 0 3 0
+5 0 6 0 0
+
+第一次遍历_martix找到列下标为0的元素依次放入_martix2
+_martix2:5                    ;
+//注意：放入一个元素后都会把新数组中的元素下标交换！
+
+第二次遍历_martix找到列下标为1的元素依次放入_martix2
+_martix2:5， 1                ；
+
+第三次遍历_martix找到列下标为2的元素依次放入_martix2
+_martix2:5 ，1， 2， 6        ；  
+
+第四次遍历_martix找到列下标为3的元素依次放入_martix2
+_martix2:5 ，1， 2， 6 ，3    ； 
+
+第五次遍历_martix找到列下标为4的元素依次放入_martix2
+_martix2:5 ，1， 2， 6 ，3 ，4；
+
+新的压缩存储数组有了，覆盖掉原来的压缩存储数组，那么接下来在最后交换一下整个矩阵的行和列数
+（转置之后行数和列数与之前相反）就可以打印了！
+
+时间复杂度：O（列数*有效数据个数）
+
+具体算法：（完整代码在最后面）
+
+ //快速转置算法 number one
+		 void FastTransposition()
+		 {
+			 vector<Triple <T> > _martix2 ;
+			 size_t n = _martix .size ();
+			 _martix2 .resize(n);
+			 size_t count = 0;
+
+			 for(size_t i = 0; i < n ;i++)
+			 {
+				 for(size_t j = 0; j < n; j++)
+				 {
+					 if(_martix[j]._col == i)
+					 {
+						 //swap(_martix[j]._col,_martix[j]._row);
+						 _martix2 [count] = _martix [j];
+						 swap(_martix2[count]._col,_martix2[count]._row);
+						 count++;
+					 }
+				 }
+			 }
+
+			 for(size_t i = 0; i< n; i++)
+			 {
+				 _martix [i] = _martix2 [i];
+			 }
+			 swap(_m,_n);
+		 }
+
+
+//第二种方法： number two
+
+第二种方法的产生就是为了减小时间复杂度，以空间换取效率的方法；把两次循环变为一层循环；
+
+首先呢，我们需要两个数组，num[矩阵的列数]  start[矩阵的列数]；
+num[]的作用是统计原矩阵每一列有多少元素；
+start[]的作用是计算出每一列的第一个元素在新的压缩矩阵中的位置；
+
+为什么要这么做？
+
+第一种方法中我们需要不停的循环原压缩数组，才能把新压缩数组中元素的位置确定，比如：遍历列
+下标为0的元素依次放入_martix2中，就遍历了一遍；
+现在我们想可不可以我每遍历到_martix中的一个元素，我就可以确定它在_martix2中对应的位置，
+
+对照着原矩阵看：
+0 0 2 0 4
+0 0 0 0 0
+0 1 0 3 0
+5 0 6 0 0
+
+比如：
+_martix：2，4，1，3，5，6;（原压缩数组）
+我遍历到 2的时候，就放在第3个位置
+_martix2: ,  , 2, ,  ,   ;
+遍历到4的时候，就放在最后一个位置
+_martix2: ,  , 2, ,  ,  4;
+
+以此类推，我们是不是遍历一遍_martix就可以了；那么接下来的问题是我们根据什么来确定在_martix2中的位置
+观察原矩阵和_martix就会发现每一列的元素在_martix2中的存储都是按照原矩阵从上到下有前后顺序的；
+_martix2：5，1，2，6，3，4；
+比如：第一列只有5，第二列只有1，第三列 2的位置在 6的前面，第四列只有3，第五列只有4；
+这个很容易就可以想明白，而_martix2采取的是原矩阵的列优先存储每一列第一个元素肯定是在前一列
+元素之后，那么只要确定了每一列第一个元素在_martix2中的位置，就好办了， 第一列的第一个的
+位置确定了，第一列剩下的元素就跟在后面，以此类推；
+
+这就是为什么我们会有num[]和start[]两个数组的原因了；
+当遍历_martix的时候，判断元素的列下标，作为start[]的下标找出该元素的存储位置，文字理解起来不容易
+想明白，还是实际演示一下，还是以上面的矩阵为例：
+num[] = 1,1,2,1,1;//每一列有多少元素
+注意：num,start的下标都代表的是列；
+start[0] = 0;//第一列第一个元素的存放位置肯定是0下标出处（好好理解）；
+start[1] = start[1 - 1] + num[1 - 1]; //第二列第一个元素的位置肯定要越过第一列的所有元素；
+start[n] = start[n - 1] + num[n - 1];//规律就出来了，需要在这里好好理解；
+
+start[] = 0,1,2,4,5;
+
+有了对应位置我们就可以给_martix2中放数据了；//代码中看
+需要注意的一点是假如我们把第n列的第一个元素放入_martix2后，对应的start[n]++；
+为什么呢？
+start[]存放的是每一列第一个元素的位置的下标，第一个放进去之后，这一列第二个元素要放在
+这一列第一个元素的后面，而第一个的下标是start[n],是不是得往后推一个位置，以此类推；
+例如：
+原矩阵的第三列的第一个元素是2，2在_martix2中存放的位置是_martix2[start[3]];
+而第三列第二个元素是6，6应该存放在2的后面，就应该放在_martix2[start[3]+1];
+
+算法如下：
+//快速转置算法 number two
+		 void FastTransposition2()
+		 {
+			 //typedef start[_martix[i]._col] pos;
+
+			 vector<Triple <T> > _martix2 ;
+			 size_t n = _martix .size ();
+			 _martix2 .resize(n);
+
+			 size_t num[5] = {0}; //统计原矩阵每列的元素个数
+			 size_t start[5] = {0};//统计每一列第一个元素在_martix2中的存放下标位置
+
+			 for(size_t i = 0; i < n; i++)
+				 num[_martix[i]._col]++;
+
+			 //为什么i从1开始？
+			 //start[i] = 0;
+			 for(size_t i = 1; i < 5; i++)
+				 start[i] = start[i - 1] + num[i - 1];
+
+			 for(size_t i = 0; i < n; i++)
+			 {
+			    _martix2 [start[_martix[i]._col]] = _martix[i];
+				swap(_martix2[start[_martix[i]._col]]._col,_martix2[start[_martix[i]._col]]._row);
+				start[_martix[i]._col]++;
+			 }
+
+			 //最后这两步和第一种的方法一样，方便打印；
+			 //最后覆盖_martix
+			 for(size_t i = 0; i< n; i++)
+			 {
+				 _martix [i] = _martix2 [i];
+			 }
+			 swap(_m,_n);
+		 }
+
+*/
+
+#include<iostream>
+#include<vector>
+
+using namespace std;
+
+template<class T>
+struct Triple      //保存数据的结构体
+{
+         size_t _row;
+         size_t _col;
+         T _data;
+
+         Triple(size_t row = 0, size_t col = 0, const T& x = T())
+                :_row( row)
+                ,_col( col)
+                ,_data( x)
+        {}
+};
+
+template<class T>
+class SparseMatrix
+{
+public:
+         SparseMatrix(T * arr, size_t m , size_t n, const T& invalid) //注意传参的含义
+                :_m( m)
+                ,_n( n)
+                ,_invalid( invalid)
+        {
+                //将有效数据都存入vector内;
+                 for(size_t i = 0; i < _m; i++)
+                {
+                         for(size_t j = 0; j < _n; j++)
+                        {
+                                 if(arr [i*n + j] != _invalid) //有效数据的判定条件；
+                                {
+                                         Triple<T > tmp(i,j,arr[i* n + j]);
+                                        _martix.push_back(tmp);
+                                }
+                        }
+                }
+        }
+
+
+		 //快速转置算法 number one
+		 void FastTransposition()
+		 {
+			 vector<Triple <T> > _martix2 ;
+			 size_t n = _martix .size ();
+			 _martix2 .resize(n);
+			 size_t count = 0;
+
+			 for(size_t i = 0; i < n ;i++)
+			 {
+				 for(size_t j = 0; j < n; j++)
+				 {
+					 if(_martix[j]._col == i)
+					 {
+						 //swap(_martix[j]._col,_martix[j]._row);
+						 _martix2 [count] = _martix [j];
+						 swap(_martix2[count]._col,_martix2[count]._row);
+						 count++;
+					 }
+				 }
+			 }
+
+			 for(size_t i = 0; i< n; i++)
+			 {
+				 _martix [i] = _martix2 [i];
+			 }
+			 swap(_m,_n);
+		 }
+
+
+		//快速转置算法 number two
+		 void FastTransposition2()
+		 {
+			 //typedef start[_martix[i]._col] pos;
+
+			 vector<Triple <T> > _martix2 ;
+			 size_t n = _martix .size ();
+			 _martix2 .resize(n);
+
+			 size_t num[5] = {0}; //统计原矩阵每列的元素个数
+			 size_t start[5] = {0};//统计每一列第一个元素在_martix2中的存放下标位置
+
+			 for(size_t i = 0; i < n; i++)
+				 num[_martix[i]._col]++;
+
+			 //为什么i从1开始？
+			 //start[i] = 1;
+			 for(size_t i = 1; i < 5; i++)
+				 start[i] = start[i - 1] + num[i - 1];
+
+			 for(size_t i = 0; i < n; i++)
+			 {
+			    _martix2 [start[_martix[i]._col]] = _martix[i];
+				swap(_martix2[start[_martix[i]._col]]._col,_martix2[start[_martix[i]._col]]._row);
+				start[_martix[i]._col]++;
+			 }
+
+			 for(size_t i = 0; i< n; i++)
+			 {
+				 _martix [i] = _martix2 [i];
+			 }
+			 swap(_m,_n);
+		 }
+
+        // 打印稀疏矩阵--就是从压缩存储还原的过程；
+
+        void Display()
+        {
+                 int index = 0;
+
+                 for(size_t i = 0; i < _m; i++)
+                {
+                         for(size_t j = 0; j < _n; j++)
+                        {
+                                 if( index < _martix.size()&& 
+                                        _martix[index]._row == i&&
+                                        _martix[index]._col == j)//判断该位置是否放置有效数据；
+                                {
+                                        cout<<_martix[index++]._data<< " ";
+                                }
+                                 else   //否则该位置放置无效数据
+                                        cout<<_invalid<< " ";
+                        }
+                        cout<<endl;
+                }
+                cout<<endl;
+        }
+
+private:
+        size_t _m;  //矩阵的行数
+         size_t _n;  //矩阵的列数
+         T _invalid; //无效数据
+         vector<Triple <T> > _martix;   //保存数据所有结构体的vector
+};
+
+void  testSparseMatrix()
+{
+         int a[6][5] =   //测试用例
+        {{1, 0, 3, 0, 5},
+        {0, 0, 0, 0, 0},
+        {0, 0, 0, 0, 0},
+        {2, 0, 4, 0, 6},
+        {0, 0, 0, 0, 0},
+        {0, 0, 0, 0, 0}};
+
+         SparseMatrix<int >  s((int *)a, 6, 5, 0); //注意类参数是一维数组指针，强制转换；
+		 
+		 //s.FastTransposition ();
+		 s.FastTransposition2 ();
+		 s.Display ();
+}
+
+
+int main()
+{
+
+	testSparseMatrix();
+
+	system("pause");
+	return 0;
+}
+
+
