@@ -1,0 +1,44 @@
+# Data-structure
+data   structure
+//前序线索化二叉树，递归
+	void _ThreadTree(Node root, Node& prev)
+	{
+		if(!(root->_left))
+		{
+			root->_left = prev;
+			root->_lefttag = THREAD ;
+		}
+
+		if(prev && !prev->_right )
+		{
+			prev->_right = root;
+			prev->_righttag = THREAD ;
+		}
+
+		prev = root;
+
+		if(root->_lefttag == LINK)
+		    _ThreadTree (root->_left , prev );
+
+		if(root->_righttag == LINK && root->_right )
+		    _ThreadTree (root->_right , prev);
+	}
+  
+  //前序遍历线索化二叉树
+	void PrevOrder()
+	{
+		Node cur = _root;
+
+		while(cur)
+		{
+			while(cur && cur->_lefttag == LINK)
+			{
+				cout<<cur->_data<<" ";
+				cur = cur->_left ;
+			}
+
+			cout<<cur->_data <<" ";
+			cur = cur->_right ;
+		}
+		cout<<endl;
+	}
