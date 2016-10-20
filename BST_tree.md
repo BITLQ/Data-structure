@@ -98,9 +98,8 @@ public:
 	//删   递归
 	bool RemoveR(const K& key)
 	{
-		Node* root = _root;
 		Node* parent = NULL;
-		return _RemoveR(root, key);
+		return _RemoveR(_root, key);
 	}
 
 	//删   非递归
@@ -115,48 +114,54 @@ public:
 		{
 			if(cur->_key == key)
 			{
+				Node* del = cur;
 				if(cur->_left && cur->_right )
 				{
 					//删除左右孩子都不为NULL的情况
 					//可以选择左树的最右结点或者右树的最左结点交换删除
-					Node* tmp = cur;
-					parent = cur;
-					cur = cur->_right ;
+					Node* minright = cur->_right ;
 
-					if(cur->_left == NULL)
-					{
-						tmp->_key = cur->_key ;
-						parent->_right = cur->_right ;
-					}
-					else
-					{
-						while(cur->_left)
-						{
-							parent = cur;
-							cur = cur->_left ;
-						}
-					//交换key值
-						tmp->_key = cur->_key ;
-						parent->_left = cur->_right ;
-					}
+					while(minright->_left )
+						minright = minright ->_left ;
+
+					cur->_key = minright->_key ;
+					del = minright ;
 		
 				}
 				else if(cur->_left == NULL)
 				{
-					if(parent->_key < key)
-						parent->_right = cur->_right ;
+					//有一种情况是，删除根节点时，根节点只有一个子树，即按照左子树为NULL
+					//或者右子树为NULL的情况处理，此时根节点的parent是NULL，所以需要单独处理！
+
+					if(parent == NULL)
+					{
+						_root = _root->_right ;
+					}
 					else
+					{
+						if(parent->_key < key)
+						parent->_right = cur->_right ;
+					    else
 						parent->_left = cur->_right;
+					}
 				}
 				else if(cur->_right ==NULL)
 				{
-					if(parent->_key < key)
-						parent->_right = cur->_left ;
+					if(parent == NULL)
+					{
+						_root = cur->_left ;
+					}
 					else
-						parent->_left = cur->_left ;
+					{
+						if(parent->_key < key)
+							parent->_right = cur->_left ;
+						else
+							parent->_left = cur->_left ;
+					}
+					
 				}
 
-				delete cur;
+				delete del;
 				return true;
 			}
 
@@ -216,44 +221,32 @@ protected:
 	{
 		if(root == NULL)
 			return false;
-
-		if(root->_key == key)
+		if(root->_key < key)
+			return _RemoveR(root->_right, key);
+		else if(root->_key > key)
+			return _RemoveR(root->_left, key);
+		else
 		{
 			Node* del = root;
 			if(root->_left == NULL)
-			{
-				//左子树为NULL；
 				root = root->_right ;
-				delete del;
-			}
 			else if(root->_right == NULL)
-			{
-				//右子树为空
 				root = root->_left ;
-				delete del;
-			}
 			else
 			{
-				//左右子树都不为空，交换右子树的最左结点，删除右子树最左结点；
-				Node* tmp = root;
-				while(tmp->_left)
-				{
-					tmp = tmp->_left ;
-				}
+				Node* minright = root; //寻找右树的最左结点进行key值的交换
+				minright =  root->_right ;
 
-				root->_key = tmp->_key ;
-
-				_RemoveR(tmp->_right , tmp->_key );
+				while(minright->_left)
+					minright = minright->_left ;
+				
+				root->_key = minright->_key ;
+				del = minright;
 			}
+
+			delete del;
 			return true;
 		}
-
-		else if(root->_key > key)
-		{
-			return _RemoveR(root->_left , key);
-		}
-		else
-			return _RemoveR(root->_right ,key);
 	}
 
 	//查找  递归
@@ -289,9 +282,17 @@ int main()
 	SearchBinaryTree<int> t(arr,10);
 
 	t.Inorder ();
-	cout<<(t.RemoveR (4))<<endl;
-	t.Inorder ();
-	cout<<t.FindR (5)<<endl;
+
+	t.Remove (0);
+	t.Remove (1);
+	t.Remove (2);
+	t.Remove (3);
+	t.Remove (4);
+	t.Remove (5);
+	t.Remove (6);
+	t.Remove (7);
+	t.Remove (8);
+	t.Remove (9);
 	t.Inorder ();
 	system("pause");
 	return 0;
