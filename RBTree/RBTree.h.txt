@@ -1,0 +1,325 @@
+#include<iostream>
+
+//红黑树
+//先和平衡树一样插入节点，新插入节点的颜色为RED；
+//如果是空树，新入结点为根结点，颜色变为BLACK；
+//当父亲为BLACK的时候，不用处理；
+//接下来分三种情况：
+//1.叔叔结点存在且为红，则把父亲结点和叔叔结点都变为黑，祖父结点变为红，向上调整；
+//2.叔叔结点不存在，则以祖父为轴单旋，父亲和组父节点颜色互换；cur一定为新插入结点；
+//3.叔叔结点存在且为黑，则一定是调整上来的；
+
+
+//Isblance的时候需要根据红黑书的性质判断；
+
+
+using namespace std;
+
+enum Color
+{
+	RED,
+	BLACK
+};
+
+template<class K,class V>
+struct RBNode
+{
+	RBNode<K,V>* _left;
+	RBNode<K,V>* _right;
+	RBNode<K,V>* _parent;
+
+	K _key;
+	V _value;
+	Color _color;
+
+	RBNode(){}
+	RBNode(const K& key,const V& value)
+		:_left(NULL)
+		,_right(NULL)
+		,_parent(NULL)
+		,_key(key)
+		,_value(value)
+		,_color(RED)
+	{}
+};
+
+template<class K,class V>
+class RBTree
+{
+public:
+	typedef RBNode<K,V> Node;
+
+	RBTree():_root(NULL){}
+
+	RBTree(const K* arr,const size_t size)
+	{
+		if(arr == NULL)
+			return false;
+
+		for(int i = 0; i < size; i++)
+		{
+			Insert(arr[i],i);
+		}
+	}
+
+	bool Insert(const K& key, const V& value)
+	{
+		return _Insert(key, value);
+	}
+
+	void Inorder()
+	{
+		Node* root = _root;
+		_Inorder(root);
+		cout<<endl;
+	}
+
+	bool IsBlance()
+	{
+		//判断平衡从红黑树的特性入手
+		//根节点为黑结点
+		if(_root->_color == RED)
+			return false;
+
+		//没有连续的红结点
+		Node* cur = _root;
+		if(!_Judge(cur))
+			return false;
+
+		//每条路径上的黑节点个数相等
+		//首先统计某一条路径上的黑色结点个数num作为比较参数；
+		size_t num = 0;
+		while(cur)
+		{
+			if(cur->_color == BLACK)
+				num++;
+			cur = cur->_left;
+		}
+
+		cur = _root;
+		return BlackCount(cur, num);
+	}
+
+protected:
+
+	bool BlackCount(Node* cur, const size_t num)
+	{
+		//count作为统计每条路径上的黑色结点的个数，注意这里是传值；
+		size_t count = 0;
+		return _BlackCount(cur, num, count);
+	}
+
+	bool _BlackCount(Node* cur, const size_t num, size_t count)
+	{
+		if(cur == NULL)
+			return true;
+		//如果结点黑结点，则到本结点的路径的count++;
+		if(cur->_color == BLACK)
+			count++;
+
+		//如果到了叶子结点，则比较当前count和num的值是否相等
+		//进而判断路径上的黑色结点是否相等；
+		if(cur->_left ==NULL && cur->_right == NULL)
+		{
+			if(count == num)
+				return true;
+			return false;
+		}
+
+		//返回值取决于左右路径返回值的“与”；
+		return _BlackCount(cur->_left,num, count) && _BlackCount(cur->_right,num,count);
+	}
+
+	bool _Judge(Node* cur)
+	{
+		if(cur == NULL)
+			return true;
+		//判断孩子是否与父亲结点的颜色是都都为红，是则返回false;
+		if(cur->_left && cur->_left->_color == RED && cur->_color == RED)
+			return false;
+		if(cur->_right && cur->_right->_color == NULL &&  cur->_color == RED)
+			return false;
+
+		//取决于左右孩子共同的返回值；
+		return _Judge(cur->_left) && _Judge(cur->_right);
+	}
+
+	//中序遍历
+	void _Inorder(Node* root)
+	{
+		if(root == NULL)
+			return;
+
+		_Inorder(root->_left);
+		cout<<root->_key<<"->"<<root->_color<<" ";
+		_Inorder(root->_right);
+	}
+
+	bool _Insert(const K& key, const V& value)
+	{
+		//首先依据搜索数特性找到插入元素的位置；
+		if(_root == NULL)
+		{
+			_root = new Node(key,value);
+			_root->_color = BLACK;
+			return true;
+		}
+
+		Node* cur = _root;
+		Node* parent = NULL;
+		while(cur)
+		{
+			parent = cur;
+
+			if(cur->_key < key)
+				cur = cur->_right ;
+
+			else if(cur->_key > key)
+				cur = cur->_left ;
+			//注意，如果元素的key已经存在，则插入失败；
+			else 
+				return false;
+		}
+
+		cur = new Node(key,value);
+
+		if(parent->_key > key)
+			parent->_left = cur;
+		else
+			parent->_right = cur;
+		
+		cur->_parent = parent;
+
+		//插入元素后进行调整
+		_Adjust(cur);
+
+		return true;
+	}
+
+	void _Adjust(Node* cur)
+	{
+		while(cur != _root)
+		{
+			Node* parent = cur->_parent ;
+			//父节点如果是黑结点，不需要调整；
+			if(cur->_parent ->_color == BLACK)
+				return;
+			//接下来是三种情况
+			Node* grandfather = NULL ;
+			Node* uncle = NULL ;
+
+			//需要判断父亲节点是祖父结点的左还是右，因为要找叔叔结点；
+			if(parent->_parent ->_left == parent)
+			{
+				grandfather = parent->_parent ;
+				uncle = grandfather->_right ;
+
+				//如果叔叔结点存在且为红，则改变父亲和叔叔结点的颜色为黑，祖父为红；
+				if(uncle && uncle->_color == RED)
+				{
+					uncle->_color = parent->_color = BLACK;
+					grandfather->_color = RED;
+				}
+				//接下来就是叔叔不存在和存在且为黑的情况；
+				else
+				{
+					//cur插在parent的左和右分两种情况，来区分是都需要双旋
+					//叔叔不存在的情况和cur插入parent左的情况一样，且cur一定为新插入结点；
+					
+					if(cur = parent->_right )
+					{
+						//如果进来就是双旋的情况
+						_RtateL(parent);
+						//根据图示关系cur和parent的位置发生了互换，需要交换回来；
+						swap(parent,cur);
+						//接下来要进行右单旋，根据图示关系，应以grandfather为轴；
+					}
+					_RtateR(parent->_parent );
+					//其实旋转的话涉及到的改变颜色都是改变grandfather和parent的颜色；
+					parent->_color = BLACK;
+					grandfather->_color = RED;
+				}
+			}
+			else
+			{
+				grandfather = parent->_parent ;
+				uncle = grandfather->_left ;
+
+				if(uncle && uncle->_color == RED)
+				{
+					uncle->_color = parent->_color = BLACK;
+					grandfather->_color = RED;
+				}
+				else
+				{
+					if(cur ==parent->_left )
+					{
+						_RtateR(parent);
+						swap(parent,cur);
+					}
+					_RtateL(parent->_parent);
+					parent->_color = BLACK;
+					grandfather->_color = RED;
+				}
+			}
+			//继续向上调整
+			cur = grandfather;
+		}
+
+		//最后一定要将_root置为黑节点，不要觉得是冗余；
+		_root->_color = BLACK;
+	}
+
+	void _RtateL(Node* parent)
+	{
+		Node* subR = parent->_right;
+		Node* subRL = subR->_left;
+
+		parent->_right = subRL; 
+		if(subRL)
+			subRL->_parent = parent;
+
+		Node* ppNode = parent->_parent ;
+
+		subR->_left = parent;
+		parent->_parent = subR;
+
+		//如果ppNode为NULL，说明parent是根节点，而现在subR取代了parent的位置；
+		if(ppNode == NULL)
+			_root = subR;
+
+		else if(ppNode->_left == parent)
+			ppNode->_left = subR;
+		else
+			ppNode->_right = subR;
+
+		//将subR连在parent的原位置上；
+		subR->_parent = ppNode;
+	}
+
+	void _RtateR(Node* parent)
+	{
+		Node* subL = parent->_left;
+		Node* subLR = subL->_right ;
+
+		parent->_left = subLR;
+		if(subLR)
+			subLR->_parent = parent;
+
+		Node* ppNode = parent->_parent ;
+		subL->_right = parent;
+		parent->_parent = subL;
+
+		if(ppNode == NULL)
+			_root = subL;
+		else if(ppNode->_left == parent)
+			ppNode->_left = subL;
+		else
+			ppNode->_right = subL;
+
+		subL->_parent = ppNode;
+	}
+
+private:
+	Node* _root;
+};

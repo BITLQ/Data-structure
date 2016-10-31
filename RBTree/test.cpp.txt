@@ -1,0 +1,20 @@
+#include"RBTree.h"
+#include<iostream>
+
+using namespace std;
+
+
+int main()
+{
+	int arr[] = {4, 2, 6, 1, 3, 5, 15, 7, 16, 14};
+
+	RBTree<int,int> t;
+
+	for(size_t i = 0; i < sizeof(arr)/sizeof(arr[0]); i++)
+		t.Insert(arr[i],i);
+	t.Inorder();
+	cout<<t.IsBlance()<<endl;
+
+	system("pause");
+	return 0;
+}
