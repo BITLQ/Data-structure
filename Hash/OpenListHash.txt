@@ -1,0 +1,221 @@
+#include<iostream>
+#include<vector>
+#include<string>
+
+using namespace std;
+
+//开链法/拉链法解决哈希冲突
+//数组存储链表指针，负载因子给到 1
+
+template<class K>
+struct _HashFunc
+{
+	size_t operator()(const K& key)
+	{
+		return key;
+	}
+};
+
+
+template<>
+struct _HashFunc<string>
+{
+	size_t operator()(const string& str)
+	{   
+			unsigned int seed= 131;// 31 131 1313 13131 131313    
+			unsigned int hash= 0; 
+			char* tmp = const_cast<char*>(str.c_str());
+
+			while(*tmp)    
+			{        
+				hash = hash*seed+ (*tmp++);    
+			}    
+
+			return(hash& 0x7FFFFFFF); 
+	}
+};
+
+template<class K,class V>
+struct KVNode
+{
+	K _key;
+	V _value;
+
+	KVNode<K,V>* _next;
+
+	KVNode(const K& key,const V& value)
+		:_key(key)
+		,_value(value)
+		,_next(NULL)
+	{}
+};
+
+template<class K,class V,class HashFunc = _HashFunc<K>>
+struct HashTable
+{
+public:
+	typedef KVNode<K,V> Node;
+
+	HashTable()
+		:_size(0)
+	{
+		_table.resize(_GetNewSize(0));
+	}
+
+	virtual ~HashTable(){}
+
+	bool Insert(const K& key, const V& value)
+	{
+		//判断是否需要增容
+		_CheckSize();
+		//插入元素，计算下标，
+		size_t index = HashFunc()(key)%_table.size();
+		return _Insert(key,value,index);
+	}
+
+	bool Remove(const K& key)
+	{
+		//删除
+		//尾结点和非尾结点可以归纳为一种情况
+		//头节点归为一种情况
+
+		size_t index = HashFunc()(key)%_table.size();
+
+		Node* cur = _table[index];
+		Node* prev = NULL;
+
+
+		if(cur == NULL)
+			return true;
+
+		while(cur)
+		{
+			if(cur->_key == key)
+			{
+				break;
+			}
+			prev = cur;
+			cur = cur->_next;
+		}
+
+		if(prev == NULL)
+			_table[index] = NULL;
+		else
+			prev->_next = NULL;
+
+		delete cur;
+		_size--;
+	}
+
+	Node* Find(const K& key)
+	{
+		//查
+		size_t index = HashFunc()(key)%_table.size();
+
+		Node* cur = _table[index];
+
+		while(cur)
+		{
+			if(cur->_key == key)
+				return cur;
+			cur = cur->_next;
+		}
+
+		return NULL;
+	}
+
+protected:
+	size_t _GetNewSize(size_t size)
+	{
+		const int _PrimeSize= 28; 
+		static const unsigned long _PrimeList[_PrimeSize] = {53ul,97ul,193ul,389ul,769ul,1543ul,3079ul,6151ul,12289ul,24593ul
+		,49157ul,98317ul,196613ul,393241ul,786433ul,1572869ul,3145739ul,6291469ul
+		,12582917ul,25165843ul,50331653ul,100663319ul,201326611ul,402653189ul,805306457ul
+		,1610612741ul,3221225473ul,4294967291ul};
+
+		for(size_t i = 0; i < 28; i++)
+		{
+			if(size < _PrimeList[i])
+				return _PrimeList[i];
+		}
+
+		return _PrimeList[27];
+	}
+
+
+	void _CheckSize()
+	{
+		if(_size/_table.size() >= 1)
+		{
+			//获取一个新的大小
+			size_t size = _GetNewSize(_table.size());
+
+			HashTable<K,V> ht;
+			ht._table.resize(size);
+
+			for(size_t i = 0; i < _table.size(); i++)
+			ht.Insert(_table[i]->_key,_table[i]->_value);
+
+			//交换_table
+			std::swap(ht._table,this->_table);
+		}
+	}
+
+	bool  _Insert(const K& key,const V& value,const size_t index)
+	{
+		//分情况
+		//key是否已经存在
+		//插入应该头插
+		//当下标index所在指针为NULL时
+		Node* newNode = new Node(key,value);
+
+		Node* tmp = _table[index];
+		while(tmp)
+		{
+			if(tmp->_key == key)
+			{
+				tmp->_value++;
+				return false;
+			}
+			tmp = tmp->_next;
+		}
+
+		if(_table[index])
+			newNode->_next = _table[index];
+		_table[index] = newNode;
+
+		_size++;
+		return true;
+	}
+
+private:
+	vector<Node*> _table;
+	size_t _size;
+};
+
+
+int main()
+{
+	//HashTable<int , int> ht;
+
+	//int arr[] = {88,89,58,79,111};
+
+	//for(size_t i = 0; i < sizeof(arr)/sizeof(arr[0]); i++)
+	//	ht.Insert (arr[i],i);
+
+	//KVNode<int,int>* tmp = ht.Find(58);
+	//ht.Remove(58);
+
+	char* arr[] = {"sort","sort","sort","test","so","test"};
+
+	HashTable<string,int> ht2;
+
+	for(size_t i = 0; i < sizeof(arr)/sizeof(arr[0]); i++)
+		ht2.Insert(arr[i],1);
+
+	KVNode<string,int>* tmp = ht2.Find("sort");
+	ht2.Remove("sort");
+
+	system("pause");
+	return 0;
+}
