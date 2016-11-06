@@ -1,0 +1,71 @@
+//位图
+
+//2.给40亿个不重复的无符号整数，没排过序。给一个无符号整数，
+//如何快速判断一个数是否在这40亿个数中。 【腾讯】
+
+
+//如果用位图解决的话需要大约500M的空间
+
+#include<iostream>
+
+using namespace std;
+
+class BitMap
+{
+public:
+	BitMap(){}
+	BitMap(size_t x)
+	{
+		//注意：这里最多浪费4个字节
+		_map = new size_t[(x>>5)+1]();
+	}
+	~BitMap()
+	{
+		delete[] _map;
+	}
+
+	BitMap& Set(size_t x)
+	{
+		//所在bit位置为1
+		size_t index = x>>5;       //index 表示第几个size_t数，也是下标
+		size_t num = x%32;         //num 表示为第几位
+
+		//指定为变为1    需要在这位上或上1
+		_map[index] |= (1<<num);
+
+		return *this;
+	}
+
+	BitMap& Reset(size_t x)
+	{
+		size_t index = x>>5;
+		size_t num = x%32;
+
+		_map[index] &= ~(1<<num);
+
+		return *this;
+	}
+
+	bool Test(size_t x) const
+	{
+		size_t index = x>>5;
+		size_t num = x%32;
+
+		return _map[index] & (1<<num);
+	}
+
+private:
+	size_t *_map;
+};
+
+
+int main()
+{
+	BitMap map(31);
+
+	map.Set(4);
+	cout<<map.Test(4)<<endl;
+
+	system("pause");
+	return 0;
+}
