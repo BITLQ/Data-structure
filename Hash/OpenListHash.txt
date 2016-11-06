@@ -150,14 +150,36 @@ protected:
 			//获取一个新的大小
 			size_t size = _GetNewSize(_table.size());
 
-			HashTable<K,V> ht;
-			ht._table.resize(size);
+			//方法1 创建一个新的对象，进行插入操作，可是会有额外的开辟空间的开销
+			//HashTable<K,V> ht;
+			//ht._table.resize(size);
 
-			for(size_t i = 0; i < _table.size(); i++)
-			ht.Insert(_table[i]->_key,_table[i]->_value);
+			//for(size_t i = 0; i < _table.size(); i++)
+			//ht.Insert(_table[i]->_key,_table[i]->_value);
 
-			//交换_table
-			std::swap(ht._table,this->_table);
+			////交换_table
+			//std::swap(ht._table,this->_table);
+
+			//方法2   创建一个新的vector 将原表的元素直接链上去
+			vector<Node*> tmptable;
+			tmptable.resize(size);
+
+			for(size_t i = 0; i < _table.size(); ++i)
+			{
+				Node* cur = _table[i];
+
+				while(cur)
+				{
+					Node* next = cur->_next;
+					size_t index = HashFunc()(cur->_key)%tmptable.size();
+					cur->_next = tmptable[index];
+					tmptable[index] = cur;
+
+					cur = next;
+				}
+			}
+
+			_table.swap(tmptable);
 		}
 	}
 
@@ -196,25 +218,29 @@ private:
 
 int main()
 {
-	//HashTable<int , int> ht;
+	HashTable<int , int> ht;
 
-	//int arr[] = {88,89,58,79,111};
-
-	//for(size_t i = 0; i < sizeof(arr)/sizeof(arr[0]); i++)
-	//	ht.Insert (arr[i],i);
-
-	//KVNode<int,int>* tmp = ht.Find(58);
-	//ht.Remove(58);
-
-	char* arr[] = {"sort","sort","sort","test","so","test"};
-
-	HashTable<string,int> ht2;
+	int arr[] = {88,89,58,79,111};
 
 	for(size_t i = 0; i < sizeof(arr)/sizeof(arr[0]); i++)
-		ht2.Insert(arr[i],1);
+		ht.Insert (arr[i],i);
+	
+	for(size_t i = 0; i<90; ++i)
+		ht.Insert(i,i);
+	
+	KVNode<int,int>* tmp = ht.Find(111);
+	ht.Remove(111);
 
-	KVNode<string,int>* tmp = ht2.Find("sort");
-	ht2.Remove("sort");
+	//char* arr[] = {"sort","sort","sort","test","so","test"};
+
+	//HashTable<string,int> ht2;
+
+	//for(size_t i = 0; i < sizeof(arr)/sizeof(arr[0]); i++)
+	//	ht2.Insert(arr[i],1);
+
+
+	/*KVNode<string,int>* tmp = ht2.Find("sort");
+	ht2.Remove("sort");*/
 
 	system("pause");
 	return 0;
