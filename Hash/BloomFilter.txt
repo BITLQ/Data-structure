@@ -1,0 +1,336 @@
+#include<iostream>
+#include<vector>
+#include "BitSet.h"
+
+using namespace std;
+
+
+//布隆过滤器
+//大数据处理： 比如查找一个单词是否拼写正确
+//思路：利用HashFunc函数返回key，为了减少冲突，可以一个单词对应多个位，
+//即利用多个HashFunc函数；对应的位需要有个权衡因子，不能太多；
+//是否可以实现删除的功能，又不影响其他的位；涉及到引用计数；
+
+
+
+//利用引用计数的方法实现删除
+template<class K = string>
+class BloomFilter
+{
+	size_t HashFunc1(const K& key)
+	{ 
+		const char* str = key.c_str();
+		unsigned int seed = 131;   
+		unsigned int hash = 0;    
+		while(*str)    
+		{        
+			hash = hash*seed + (*str++);    
+		}    
+		return(hash& 0x7FFFFFFF);
+	};
+
+	size_t HashFunc2(const K& key)  
+	{  
+		const char* str = key.c_str();
+		register size_t hash = 0;  
+		while (size_t ch = (size_t)*str++)  
+		{  
+			hash = 65599 * hash + ch;         
+            //hash = (size_t)ch + (hash << 6) + (hash << 16) - hash;  
+		}  
+		return hash;  
+}  
+  
+ 
+size_t HashFunc3(const K& key)  
+{  
+	const char* str = key.c_str();
+    register size_t hash = 0;  
+    size_t magic = 63689;     
+    while (size_t ch = (size_t)*str++)  
+    {  
+        hash = hash * magic + ch;  
+        magic *= 378551;  
+    }  
+    return hash;  
+}  
+
+
+size_t HashFunc4(const K& key)  
+{  
+	const char* str = key.c_str();
+    register size_t hash = 0;  
+    size_t ch;  
+    for (long i = 0; ch = (size_t)*str++; i++)  
+    {  
+        if ((i & 1) == 0)  
+        {  
+            hash ^= ((hash << 7) ^ ch ^ (hash >> 3));  
+        }  
+        else  
+        {  
+            hash ^= (~((hash << 11) ^ ch ^ (hash >> 5)));  
+        }  
+    }  
+    return hash;  
+}  
+
+ 
+size_t HashFunc5(const K& key)  
+{  
+	const char* str = key.c_str();
+    if(!*str)      
+        return 0;  
+    register size_t hash = 1315423911;  
+    while (size_t ch = (size_t)*str++)  
+    {  
+        hash ^= ((hash << 5) + ch + (hash >> 2));  
+    }  
+    return hash;  
+}  
+
+public:
+	BloomFilter(const size_t size)
+	{
+		_map.resize(size);
+		for(size_t i = 0; i<_map.size();++i)
+			_map[i] = 0;
+	}
+
+	void Set(const K& key)
+	{
+		size_t hash1 = HashFunc1(key);
+		size_t hash2 = HashFunc2(key);
+		size_t hash3 = HashFunc3(key);
+		size_t hash4 = HashFunc4(key);
+		size_t hash5 = HashFunc5(key);
+
+		_map[hash1%_map.size()]++;
+		_map[hash2%_map.size()]++;
+		_map[hash3%_map.size()]++;
+		_map[hash4%_map.size()]++;
+		_map[hash5%_map.size()]++;
+	}
+
+	bool ReSet(const K& key)
+	{
+		size_t hash1 = HashFunc1(key);
+		if(_map[hash1%_map.size()]==0)
+			return false;
+		size_t hash2 = HashFunc2(key);
+		if(_map[hash2%_map.size()]==0)
+			return false;
+		size_t hash3 = HashFunc3(key);
+		if(_map[hash3%_map.size()]==0)
+			return false;
+		size_t hash4 = HashFunc4(key);
+		if(_map[hash4%_map.size()]==0)
+			return false;
+		size_t hash5 = HashFunc5(key);
+		if(_map[hash5%_map.size()]==0)
+			return false;
+
+	
+		_map[hash1%_map.size()]--;
+		_map[hash2%_map.size()]--;
+		_map[hash3%_map.size()]--;
+		_map[hash4%_map.size()]--;
+		_map[hash5%_map.size()]--;
+
+		return true;
+	}
+
+	bool Test(const K& key)
+	{
+		size_t hash1 = HashFunc1(key);
+		if(_map[hash1%_map.size()] == 0)
+			return false;
+		size_t hash2 = HashFunc2(key);
+		if(_map[hash2%_map.size()] == 0)
+			return false;
+		size_t hash3 = HashFunc3(key);
+		if(_map[hash3%_map.size()] == 0)
+			return false;
+		size_t hash4 = HashFunc4(key);
+		if(_map[hash4%_map.size()] == 0)
+			return false;
+		size_t hash5 = HashFunc5(key);
+		if(_map[hash5%_map.size()] == 0)
+			return false;
+
+		return true;
+	}
+
+private:
+	vector<size_t> _map;
+};
+
+
+int main()
+{
+	BloomFilter<> b(32);
+	b.Set("aaa");
+	b.Set("bbb");
+	b.Set("ccc");
+
+	cout<<b.Test("aa")<<endl;
+	cout<<b.Test("aaa")<<endl;
+
+	cout<<b.Test("b")<<endl;
+	cout<<b.Test("bbb")<<endl;
+
+	b.ReSet("bbb");
+	cout<<b.Test("bbb")<<endl;
+	
+	b.ReSet("aaa");
+	cout<<b.Test("aaa")<<endl;
+
+	system("pause");
+	return 0;
+}
+
+
+//template<class K = string>
+//class BloomFilter
+//{
+//	size_t HashFunc1(const K& key)
+//	{ 
+//		const char* str = key.c_str();
+//		unsigned int seed = 131;   
+//		unsigned int hash = 0;    
+//		while(*str)    
+//		{        
+//			hash = hash*seed + (*str++);    
+//		}    
+//		return(hash& 0x7FFFFFFF);
+//	};
+//
+//	size_t HashFunc2(const K& key)  
+//	{  
+//		const char* str = key.c_str();
+//		register size_t hash = 0;  
+//		while (size_t ch = (size_t)*str++)  
+//		{  
+//			hash = 65599 * hash + ch;         
+//            //hash = (size_t)ch + (hash << 6) + (hash << 16) - hash;  
+//		}  
+//		return hash;  
+//}  
+//  
+// 
+//size_t HashFunc3(const K& key)  
+//{  
+//	const char* str = key.c_str();
+//    register size_t hash = 0;  
+//    size_t magic = 63689;     
+//    while (size_t ch = (size_t)*str++)  
+//    {  
+//        hash = hash * magic + ch;  
+//        magic *= 378551;  
+//    }  
+//    return hash;  
+//}  
+//
+//
+//size_t HashFunc4(const K& key)  
+//{  
+//	const char* str = key.c_str();
+//    register size_t hash = 0;  
+//    size_t ch;  
+//    for (long i = 0; ch = (size_t)*str++; i++)  
+//    {  
+//        if ((i & 1) == 0)  
+//        {  
+//            hash ^= ((hash << 7) ^ ch ^ (hash >> 3));  
+//        }  
+//        else  
+//        {  
+//            hash ^= (~((hash << 11) ^ ch ^ (hash >> 5)));  
+//        }  
+//    }  
+//    return hash;  
+//}  
+//
+// 
+//size_t HashFunc5(const K& key)  
+//{  
+//	const char* str = key.c_str();
+//    if(!*str)      
+//        return 0;  
+//    register size_t hash = 1315423911;  
+//    while (size_t ch = (size_t)*str++)  
+//    {  
+//        hash ^= ((hash << 5) + ch + (hash >> 2));  
+//    }  
+//    return hash;  
+//}  
+//
+//public:
+//	BloomFilter(const size_t size)
+//		:_size(size)
+//		,_bitmap(size)
+//	{}
+//
+//	void Set(const K& key)
+//	{
+//		size_t hash1 = HashFunc1(key);
+//		_bitmap.Set(hash1%_size);
+//		size_t hash2 = HashFunc1(key);
+//		_bitmap.Set(hash2%_size);
+//		size_t hash3 = HashFunc1(key);
+//		_bitmap.Set(hash3%_size);
+//		size_t hash4 = HashFunc1(key);
+//		_bitmap.Set(hash4%_size);
+//		size_t hash5 = HashFunc1(key);
+//		_bitmap.Set(hash5%_size);
+//	}
+//
+//	void ReSet()
+//	{}
+//
+//	bool Test(const K& key)
+//	{
+//		size_t hash1 = HashFunc1(key);
+//		if(!_bitmap.Test(hash1%_size))
+//			return false;
+//		size_t hash2 = HashFunc1(key);
+//		if(!_bitmap.Test(hash2%_size))
+//			return false;
+//		size_t hash3 = HashFunc1(key);
+//		if(!_bitmap.Test(hash3%_size))
+//			return false;
+//		size_t hash4 = HashFunc1(key);
+//		if(!_bitmap.Test(hash4%_size))
+//			return false;
+//		size_t hash5 = HashFunc1(key);
+//		if(!_bitmap.Test(hash5%_size))
+//			return false;
+//
+//		return true;
+//	}
+//
+//private:
+//	BitMap _bitmap;
+//	size_t _size;
+//};
+//
+//
+//int main()
+//{
+//	BloomFilter<> bloom(32);
+//	bloom.Set("aaaaaaaaaa");
+//	bloom.Set("bbbbbbbbbb");
+//	bloom.Set("cccccccccc");
+//	bloom.Set("dddddddddd");
+//
+//	cout<<bloom.Test("aaaaaaaaaa")<<endl;
+//	cout<<bloom.Test("aaaaa")<<endl;
+//	
+//	cout<<bloom.Test("bbbbbbbbbb")<<endl;
+//	cout<<bloom.Test("bbbbb")<<endl;
+//
+//	cout<<bloom.Test("dddddddddd")<<endl;
+//	cout<<bloom.Test("dddd")<<endl;
+//	system("pause");
+//	return 0;
+//}
