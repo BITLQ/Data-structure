@@ -1,0 +1,95 @@
+#include<iostream>
+#include<vector>
+
+
+/* 快速排序的思想是：填坑法+分治法
+首先得有一个基准：一般开始取出第一个元素为基准，并且第一个元素的第一个位置就变成了
+第一个坑；
+填坑法就是：
+先从最右到最左找到第一个小于基准的值填坑中，当前位置又是一个新坑；
+在从上一个坑的位置开始从左到右找到第一个大于基准的值，放到当前的坑中；
+当左和右走到同一个位置时，即这个位置是当前坑的位置，则把基准放入当前位置；
+
+分治法：
+把基准放入的位置的左和右又分为两个分区，重复上面的步骤，即递归的过程；
+注意使用int；不能使用size_t;
+*/
+
+using namespace std;
+
+class Qsort
+{
+public:
+
+	void Insert(const int data)
+	{
+		_v.push_back(data);
+	}
+
+	void quicksort(int l,int r)
+	{
+		if(l<r)
+		{
+			int i = l;
+			int j = r;
+		    int X = _v[i];
+		    
+			while(i < j)
+			{
+				while(i<j && _v[j] >= X)
+					j--;
+				if(i<j)
+					_v[i++] = _v[j];
+				while(i<j && _v[i] < X)
+					i++;
+				if(i<j)
+					_v[j--] = _v[i];
+			}
+
+			_v[i] = X;
+			quicksort(l,i-1);
+		    quicksort(i+1,r);
+		}
+	}
+
+	void Sort()
+	{
+		int i = 0;
+		int j = _v.size() - 1;
+		int X = _v[i];
+		
+		while(i < j)
+		{
+			while(i<j && _v[j] >= X)
+				j--;
+			if(i<j)
+				_v[i++] = _v[j];
+
+			while(i<j && _v[i] < X )
+				i++;
+			if(i < j)
+				_v[j--] = _v[i];
+		}
+
+		_v[i] = X;
+
+		quicksort(0,i-1);
+		quicksort(i+1,_v.size()-1);
+	}
+private:
+	vector<int> _v;
+};
+
+int main()
+{
+	int arr[] = {2,4,1,9,0,8,6,5,7,3};
+	Qsort q;
+
+	for(int i = 0; i<10; ++i)
+		q.Insert(arr[i]);
+
+	q.Sort();
+
+	system("pause");
+	return 0;
+}
