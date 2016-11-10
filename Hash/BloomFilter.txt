@@ -2,10 +2,13 @@
 #include<vector>
 #include "BitSet.h"
 
+
+//布隆过滤器
+
+
 using namespace std;
 
 
-//布隆过滤器
 //大数据处理： 比如查找一个单词是否拼写正确
 //思路：利用HashFunc函数返回key，为了减少冲突，可以一个单词对应多个位，
 //即利用多个HashFunc函数；对应的位需要有个权衡因子，不能太多；
