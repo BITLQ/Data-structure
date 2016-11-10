@@ -1,0 +1,61 @@
+#include<iostream>
+#include<vector>
+
+/*希尔排序：
+
+原理，利用直接插入排序和希尔分区，进行快速排序；
+其中直接插入排序利用了swap进行了代码的简化；
+
+*/
+using namespace std;
+
+class shellsort
+{
+public:
+	void Inert(const int& data)
+	{
+		_v.push_back(data);
+	}
+
+	void Sort()
+	{
+		int gap = 0;
+		int i = 0;
+
+		for(gap = _v.size()/2; gap > 0; gap/=2)
+			for(i = gap; i<_v.size(); i++)
+				for(int j = i - gap; j>=0 && _v[j]>_v[j+gap]; j-=gap)
+					swap(_v[j],_v[j+gap]);
+
+		/*for(i = 1; i<n;i++)
+			for(j = i-1; j>=0 && arr[j]>arr[j+1]; j--)
+				swap(arr[j],arr[j+1]);*/
+	}
+
+	/*void shellsort3(int a[], int n) 
+		{  
+			int i, j, gap;  
+  
+           for (gap = n / 2; gap > 0; gap /= 2)  
+           for (i = gap; i < n; i++)  
+           for (j = i - gap; j >= 0 && a[j] > a[j + gap]; j -= gap) 
+			   swap(a[j], a[j + gap]);  
+		} */
+
+private:
+	vector<int> _v;
+};
+
+int main()
+{
+	int arr[] = {3,6,1,7,5,2,4,0,9,8};
+	shellsort s;
+
+	for(int i = 0; i < 10; ++i)
+		s.Inert(arr[i]);
+
+	s.Sort();
+	
+	system("pause");
+	return 0;
+}
