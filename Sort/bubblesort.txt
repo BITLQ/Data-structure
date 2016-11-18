@@ -1,0 +1,29 @@
+//冒泡排序可以进行两层优化
+//升序为例
+//第一层，如果说前面的已经有序，则不用继续冒泡；即未发生交换；
+//第二层，记住第一次冒泡最后发生交换的位置，可以减少内循环比较次数；
+//时间复杂度：O（n^2）
+//void BubbleSort(int* arr,int size)
+//{
+//	int flag = 0;
+//	int stop = size - 1;
+//	int i = 0;
+//	for(i = 0; i<size-1; ++i)
+//	{
+//		int t = stop;
+//		for(int j = 0; j < t; ++j)
+//		{
+//			if(arr[j]>arr[j+1])
+//			{
+//				swap(arr[j],arr[j+1]);
+//				stop = j;
+//				flag = 1;
+//			}
+//		}
+//		
+//		
+//		if(flag == 0)
+//			
+//			break;
+//	}
+//}
