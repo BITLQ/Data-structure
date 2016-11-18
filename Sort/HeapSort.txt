@@ -1,0 +1,42 @@
+//堆排序
+//选择排序的一种，时间复杂度 Nlog2N;
+//重点在于调整；向下调整
+//一般用于大数据的topk;
+//向下调整
+//void JustDown(int* arr,int parent, int size)
+//{
+//
+//	//向下调整，从第一个非叶子结点开始调整，一般是最后一个结点的父节点；
+//	//调整到根节点；
+//		int lchild = parent*2 +1;
+//
+//		while(lchild < size)
+//		{
+//			if(lchild +1 < size && arr[lchild] < arr[lchild+1])
+//				++lchild;
+//			if(arr[lchild] > arr[parent])
+//			{
+//				swap(arr[parent],arr[lchild]);
+//				parent = lchild;
+//				lchild = parent*2+1;
+//			}
+//			else
+//				break;
+//		}
+//}
+//
+////堆化数组
+//void HeapSort(int* arr,int size)
+//{
+//	//确定下标之间的关系
+//    //建最大堆
+//	for(int i = (size - 2)/2; i >= 0; --i)
+//		JustDown(arr,i,size);
+//
+//	//排序，将最后一个元素和堆顶元素交换后，继续向上调整
+//	for(int i = size - 1; i>0; --i)
+//	{
+//		swap(arr[i],arr[0]);
+//		JustDown(arr,0,i);
+//	}
+//}
