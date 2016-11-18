@@ -1,0 +1,10 @@
+//升序为例
+//直接插入排序，利用现代swap写法
+//在序列接近有序的情况下时间复杂度最小，最差是逆序;
+//时间复杂度 O（n^2）;
+//void InsertSort(int* arr,int size)
+//{
+//	for(int i = 1; i < size; ++i)
+//		for(int j = i - 1; j >= 0 && arr[j]>arr[j+1]; --j)
+//			swap(arr[j],arr[j+1]);
+//}
