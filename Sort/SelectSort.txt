@@ -1,0 +1,14 @@
+//升序为例
+//选择排序
+//选择排序是每次都从剩余的序列中找到一个最小的数放在对应的位置
+//时间复杂度：O(n^2)
+
+//void SelectSort(int* arr, int size)
+//{
+//	for(int i = 0; i<size; ++i)
+//		for(int j = i; j<size; ++j)
+//		{
+//			if(arr[j]<arr[i])
+//				swap(arr[j],arr[i]);
+//		}
+//}
