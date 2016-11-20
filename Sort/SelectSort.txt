@@ -12,3 +12,29 @@
 //				swap(arr[j],arr[i]);
 //		}
 //}
+
+//选择排序做一点小的优化，即两头同时排序，每次分别选择一个最大的，一个最小的；
+void SelectSortP(int* arr, int size)
+{
+	int min = 0;
+	int max = 0;
+	int len = size - 1;
+
+	for(int i = 0; i < size/2; ++i)
+	{
+		max = min = i;
+
+		for(int j = i+1; j <= len; ++j )
+		{
+			if(arr[j] < arr[min])
+				min = j;
+			if(arr[j] > arr[max])
+				max = j;
+		}
+
+		swap(arr[min],arr[i]);
+		if(max == i)
+			max = min;
+		swap(arr[max],arr[len--]);
+	}
+}
