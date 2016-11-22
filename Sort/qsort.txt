@@ -93,3 +93,392 @@ int main()
 	system("pause");
 	return 0;
 }
+
+#include<iostream>
+#include<stack>
+
+using namespace std;
+
+/*快速排序的深入理解
+
+--快速排序的三种实现方法，左右指针，填坑分治法，前后指针，非递归实现；
+
+--非递归的实现是利用参数压栈来模拟递归；
+
+--为什么快排的时间复杂度为nlogn?
+
+--根据快速排序的特性分析时间复杂度，当每次取得key值是最大或者最小值得话，快速排序的时间复杂度
+为0(N^2),而我们所知道的快速排序的时间复杂度为nlogn,为什么呢？
+
+因为库里采用了三数取中法，完全杜绝了这种情况，而三数取中法使快排更接近nlogn；
+
+--快速排序递归实现的两个优化，第一，当right - left < 13时进行直接插入排序，
+减少递归函数栈帧的开销；第二，三数取中法；
+
+*/
+
+//左右指针法
+int QuickSortPtr(int* arr, int begin, int end)
+{
+	int left = begin;
+	int right = end;
+
+	while(left < right)
+	{
+		while(left < right && arr[left] <= arr[right])
+			++left;
+		if(left < right)
+			swap(arr[left],arr[right]);
+
+		while(left < right && arr[right] >= arr[left])
+			--right;
+		if(left < right)
+			swap(arr[right],arr[left]);
+	}
+	return left;
+}
+
+
+//填坑法（类似左右指针法）
+int QuickSortKeng(int* arr, int begin, int end)
+{
+	int key = arr[end];
+	int left = begin;
+	int right = end;
+
+	while(left < right)
+	{
+		while(left < right && arr[left] <= key)
+			++left;
+		if(left < right)
+			arr[right] = arr[left];
+		
+		while(left < right && arr[right] >= key)
+			--right;
+		if(left < right)
+			arr[left] = arr[right];
+	}
+
+	//这时left == right
+	arr[left] = key;
+	return left;
+}
+
+
+//前后指针法
+//prev 代表的是前面的指针，cur代表后面的指针；
+int QuickSortPrve(int* arr, int begin, int end)
+{
+	int prev = begin - 1;
+	int cur = begin;
+
+	while(cur <= end)
+	{
+		if(arr[cur] <= arr[end])
+		{
+			++prev;
+			swap(arr[prev],arr[cur]);
+		}
+		++cur;
+	}
+	return prev;
+}
+
+void QuickSort(int* arr, int begin, int end)
+{
+	int left = 0;
+	if(begin < end)
+	{
+		//left = QuickSortPtr(arr,begin,end);
+		left = QuickSortKeng(arr,begin,end);
+	    // left = QuickSortPrve(arr,begin,end);
+		
+		QuickSort(arr, begin,left - 1);
+		QuickSort(arr, left+1, end);	
+	}
+}
+
+//快速排序的优化
+//优化一：三数取中法，即每次取得key值肯定不是最大的或者最小的；为了排除快速排序的最坏情况；
+//优化二：当需要排序的数的个数小于13时，采取直接插入排序，可以减少很大的函数栈帧的开销
+
+//只演示其中一种实现方式的优化；
+
+
+int MidNumber(int* arr,int begin,int end)
+{
+	int mid = begin + ((end - begin)>>1); //考虑到超出整数范围
+
+	if(arr[mid] > arr[begin])
+	{
+		//mid > begin
+		if(arr[mid] < arr[end])
+			return mid;
+		else if(arr[end] > arr[begin])
+			return end;
+		else
+			return begin;
+	}
+	else
+	{
+		// end > begin > mid  
+		if(arr[begin] < arr[end])
+			return begin;
+		//begin > end ? mid
+		else if(arr[mid] > arr[end])
+			return mid;
+		else
+			return end;
+	}
+}
+
+//直接插入排序
+void Insert(int* arr,int begin, int end)
+{
+	for(int i = begin + 1; i <= end; ++i)
+	{
+		for(int j = i - 1; j >= begin && arr[j] > arr[j + 1]; --j)
+			swap(arr[j],arr[j+1]);
+	}
+}
+
+//填坑法优化
+int QuickSortKengP(int* arr, int begin, int end)
+{
+	int mid = MidNumber(arr,begin,end);
+	int key = arr[mid];
+	swap(arr[mid],arr[end]);   //将找到的合适的中间值和区间最后的值进行交换
+	int left = begin;
+	int right = end;
+
+	while(left < right)
+	{
+		while(left < right && arr[left] <= key)
+			++left;
+		if(left < right)
+			arr[right] = arr[left];
+		
+		while(left < right && arr[right] >= key)
+			--right;
+		if(left < right)
+			arr[left] = arr[right];
+	}
+
+	//这时left == right
+	arr[left] = key;
+	return left;
+}
+
+//优化快排
+void QuickSortP(int* arr, int begin, int end)
+{
+	int left = 0;
+	if(end - begin < 13)  //当待排序序列个数大于13时进行快排
+	{
+		left = QuickSortKengP(arr,begin,end);
+		
+		QuickSortP(arr, begin,left - 1);
+		QuickSortP(arr, left+1, end);	
+	}
+	//当待排序序列个数小于13时进行直接插入排序
+	else
+	{
+		Insert(arr,begin,end);
+	}
+}
+
+
+//利用非递归实现快速排序
+//思路：利用函数参数的压栈模拟实现快速排序
+
+void QuickSortNotR(int* arr, int begin, int end)
+{
+	//利用参数压栈的特性
+	stack<int> s;
+	s.push(begin);
+	s.push(end);
+
+	while(!s.empty())
+	{
+		//时刻记住该pop栈顶元素的时刻；
+		int right = s.top();
+		s.pop();
+		int left = s.top();
+		s.pop();
+
+		begin = left;
+		end = right;
+		int mid = MidNumber(arr,left,right);
+		int key = arr[mid];
+		swap(arr[mid],arr[right]);
+
+		while(left < right)
+		{
+			while(left < right && arr[left] <= key)
+				++left;
+			if(left < right)
+				arr[right] = arr[left];
+		
+			while(left < right && arr[right] >= key)
+				--right;
+			if(left < right)
+				arr[left] = arr[right];
+		}
+		//这时left == right
+		arr[left] = key;
+
+		if(begin < left - 1)
+		{
+			s.push(begin);
+			s.push(left - 1);
+		}
+		if(left + 1 < end)
+		{
+			s.push(left + 1);
+			s.push(end);
+		}
+	}
+}
+
+void DisPlay(int* arr,int n)
+{
+	for(int i = 0; i < n; ++i)
+		cout<<arr[i]<<" ";
+	cout<<endl;
+}
+
+#pragma once
+#include"QuickSort.h"
+#include<iostream>
+#include<windows.h>
+
+using namespace std;
+
+void TestQuickSortPtr(int* arr, int n)
+{
+	//未优化快速排序
+	int start = GetTickCount();
+	QuickSort(arr,0,n - 1);
+	int end = GetTickCount();
+	DisPlay(arr, n);
+	cout<<"using time:"<<end - start<<endl;
+
+	//优化版快速排序
+	start = GetTickCount();
+	QuickSortP(arr,0,n - 1);
+	end = GetTickCount();
+	DisPlay(arr, n);	
+	cout<<"using time:"<<end - start<<endl;
+	
+	//测试非递归实现快速排序
+	QuickSortNotR(arr,0,n-1);
+	DisPlay(arr,n);
+}
+
+int main()
+{
+	int arr[15] = {9,7,6,4,5,3,1,0,9,7,6,8,2,6,5};
+	TestQuickSortPtr(arr,15);
+
+	/*int* arr = new int[1000];
+	for(int i = 0; i<1000; ++i)
+		arr[i] = i;
+
+	TestQuickSortPtr(arr,1000)*/;
+
+	system("pause");
+	return 0;
+}
+
+
+/* 快速排序的思想是：填坑法+分治法
+首先得有一个基准：一般开始取出第一个元素为基准，并且第一个元素的第一个位置就变成了
+第一个坑；
+填坑法就是：
+先从最右到最左找到第一个小于基准的值填坑中，当前位置又是一个新坑；
+在从上一个坑的位置开始从左到右找到第一个大于基准的值，放到当前的坑中；
+当左和右走到同一个位置时，即这个位置是当前坑的位置，则把基准放入当前位置；
+
+分治法：
+把基准放入的位置的左和右又分为两个分区，重复上面的步骤，即递归的过程；
+注意使用int；不能使用size_t;
+*/
+
+//using namespace std;
+//
+//class Qsort
+//{
+//public:
+//
+//	void Insert(const int data)
+//	{
+//		_v.push_back(data);
+//	}
+//
+//	void quicksort(int l,int r)
+//	{
+//		if(l<r)
+//		{
+//			int i = l;
+//			int j = r;
+//		    int X = _v[i];
+//		    
+//			while(i < j)
+//			{
+//				while(i<j && _v[j] >= X)
+//					j--;
+//				if(i<j)
+//					_v[i++] = _v[j];
+//				while(i<j && _v[i] < X)
+//					i++;
+//				if(i<j)
+//					_v[j--] = _v[i];
+//			}
+//
+//			_v[i] = X;
+//			quicksort(l,i-1);
+//		    quicksort(i+1,r);
+//		}
+//	}
+//
+//	void Sort()
+//	{
+//		int i = 0;
+//		int j = _v.size() - 1;
+//		int X = _v[i];
+//		
+//		while(i < j)
+//		{
+//			while(i<j && _v[j] >= X)
+//				j--;
+//			if(i<j)
+//				_v[i++] = _v[j];
+//
+//			while(i<j && _v[i] < X )
+//				i++;
+//			if(i < j)
+//				_v[j--] = _v[i];
+//		}
+//
+//		_v[i] = X;
+//
+//		quicksort(0,i-1);
+//		quicksort(i+1,_v.size()-1);
+//	}
+//private:
+//	vector<int> _v;
+//};
+//
+//int main()
+//{
+//	int arr[] = {2,4,1,9,0,8,6,5,7,3};
+//	Qsort q;
+//
+//	for(int i = 0; i<10; ++i)
+//		q.Insert(arr[i]);
+//
+//	q.Sort();
+//
+//	system("pause");
+//	return 0;
+//}
