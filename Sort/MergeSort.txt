@@ -1,0 +1,103 @@
+#include<iostream>
+#include<cassert>
+
+using namespace std;
+
+//归并排序  采用分治的思想
+//递归实现和非递归实现
+//需要辅助内存
+//大概思想，即先进行不断的二分，直至不能分割，进行合并；
+
+void MergeSortR(int* arr, int* tmp, int begin, int end)
+{
+	assert(arr);
+	if(begin < end)
+	{
+		int left1 = begin;int left2 = begin+1+((end - begin)>>1);
+		int right1 = begin+((end - begin)>>1); int right2 = end;
+		MergeSortR(arr,tmp,left1,right1);
+		MergeSortR(arr,tmp,left2,right2);
+
+		int index = left1;
+		int tmpindex  = index;
+		while(left1 <= right1 && left2 <= right2)
+		{
+			if(arr[left1] < arr[left2])
+				tmp[index++] = arr[left1++];
+			else
+				tmp[index++] = arr[left2++];
+		}
+
+		//判断是哪一个分区走完了。另外一个分区的依次放入；
+		if(left2 <= right2)
+		{
+			while(left2 <= right2)
+				tmp[index++] = arr[left2++];
+		}
+		else if(left1 < right1)
+		{
+			while(left1 <= right1)
+				tmp[index++] = arr[left1++];
+		}
+
+		//最后将tmp中的元素放回arr；
+		for(int i = tmpindex; i < index; ++i)
+			arr[i] = tmp[i];
+	}
+}
+
+//非递归
+void MergeSort(int* arr, int* tmp,int lenth)
+{
+	assert(arr);
+	//利用下标,和辅助内存
+	int leftmin = 0,rightmin,leftmax,rightmax;
+	int index = 0;
+
+	for(int i = 1; i < lenth; i*=2) //控制分段步长 1，2,4,6,8，……
+	{
+		for(leftmin = 0; leftmin < lenth - i; leftmin = rightmin)
+		{
+			leftmax = rightmin = leftmin+i;
+			rightmax = rightmin+i;
+
+			if(rightmax > lenth)
+				rightmax = lenth;
+
+			int tmpindex = leftmin;
+			index = leftmin;
+
+			while(leftmin < leftmax && rightmin < rightmax)
+				arr[leftmin] < arr[rightmin] ? tmp[index++] = arr[leftmin++]:tmp[index++] = arr[rightmin++];
+
+			while(leftmin < leftmax)
+				tmp[index++] = arr[leftmin++];
+
+			while(rightmin < rightmax)
+				tmp[index++] = arr[rightmin++];
+
+			for(tmpindex; tmpindex < index; ++tmpindex)
+				arr[tmpindex] = tmp[tmpindex];
+		}
+	}
+}
+
+
+int main()
+{
+	const int n = 18;
+	int arr[n] = {1,4,3,6,8,0,3,4,2,7,0,9,6,8,7,4,3,2};
+	int tmp[n] = {0};
+	MergeSortR(arr,tmp,0,n - 1);
+	for(int i = 0; i < n; ++i)
+		cout<<arr[i]<<" ";
+	cout<<endl;
+
+	MergeSort(arr,tmp,18);
+	for(int i = 0; i < n; ++i)
+		cout<<arr[i]<<" ";
+	cout<<endl;
+
+	system("pause");
+	return 0;
+}
