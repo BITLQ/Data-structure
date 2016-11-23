@@ -1,0 +1,115 @@
+//2. 由前序遍历和中序遍历重建二叉树（前序序列：1 2 3 4 5 6 - 中序序列:3 2 4 1 6 5）
+
+#include<iostream>
+#include<cassert>
+
+using namespace std;
+
+//前序遍历的第一个节点肯定是根节点，在中序遍历中找到第一个节点，左边的是左子树，右边的右子树；
+//采用类似分治法的思想；
+
+struct Node
+{
+	int _data;
+	Node* _left;
+	Node* _right;
+
+	Node(const int& data):_data(data),_left(NULL),_right(NULL){}
+};
+
+class BinaryTree
+{
+public:
+	BinaryTree(int* pre, int* inarr , int size)
+	{
+		assert(pre && inarr);
+		_root = _GreatTree(pre,pre+size-1,inarr,inarr+size-1);
+	}
+
+	//前序遍历
+	void PreOrder()
+	{
+		_PreOrderR(_root);
+		cout<<endl;
+	}
+
+	//中序遍历
+	void InOrder()
+	{
+		_InOrderR(_root);
+		cout<<endl;
+	}
+
+protected:
+	//递归前序遍历
+	void _PreOrderR(Node* root)
+	{
+		if(root == NULL)
+			return;
+		cout<<root->_data<<" ";
+		_PreOrderR(root->_left);
+		_PreOrderR(root->_right);
+	}
+
+	//递归中序遍历
+	void _InOrderR(Node* root)
+	{
+		if(root == NULL)
+			return;
+
+		_InOrderR(root->_left);
+		cout<<root->_data<<" ";
+		_InOrderR(root->_right);
+	}
+
+protected:
+	//前序序列：1 2 3 4 5 6 - 中序序列:3 2 4 1 6 5
+	//在没有重复节点的前提下
+	Node* _GreatTree(int* prestart, int* preend,int* inarrstart,int* inarrend)
+	{
+		Node* root = new Node(*prestart);
+
+		//如果只有当前一个节点，则将创建好的这个节点返回；
+		if(prestart == preend && inarrstart == inarrend)
+			return root;
+
+		//找到中序遍历中的根节点
+		int* rootInorder = inarrstart;
+		while(rootInorder <= inarrend && *prestart != *rootInorder)
+				++rootInorder;
+        
+		//创建左子树
+		int lenth = rootInorder - inarrstart; //左子树的节点数量
+		int* leftpreend = prestart+lenth;  // 左子树前序遍历节尾
+		
+		//如果在当前根节点有左子树，进行创建左子树
+		if(lenth > 0)
+			root->_left = _GreatTree(prestart+1,leftpreend,inarrstart,rootInorder);
+
+		//创建右子树
+		int* rightprestart = leftpreend+1; //右子树前序遍历的开始
+
+		//如果当前根节点有右子树，则创建右子树；
+		if(lenth < preend - prestart)
+			root->_right = _GreatTree(rightprestart,preend,rootInorder+1,inarrend);
+
+		return root;
+	}
+private:
+	Node* _root;
+};
+
+
+int main()
+{
+	int pre[] = {1,2,3,4,5,6};
+	int inarr[] = {3,2,4,1,6,5};
+
+	BinaryTree b(pre,inarr,6);
+
+	b.PreOrder();
+	b.InOrder();
+
+	system("pause");
+	return 0;
+}
