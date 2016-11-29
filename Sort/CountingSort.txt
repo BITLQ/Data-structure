@@ -1,0 +1,60 @@
+计数排序
+
+计数排序的思想：类似于哈希表的开放定址法；
+优点：时间复杂度低；
+缺点：空间复杂度高，适用范围小；
+
+#include<iostream>
+#include<cassert>
+
+using namespace std;
+
+void CountingSort(int* arr, int size)
+{
+	assert(arr);
+	//需要开辟数值区间的大小的辅助空间；
+
+	//找出最大数和最小数，确定开辟空间的大小；
+	int max = arr[0];
+	int min = arr[0];
+
+	for(int i = 1; i < size; ++i)
+	{
+		if(arr[i] < min)
+			min = arr[i];
+		if(arr[i] > max)
+			max = arr[i];
+	}
+
+	int* count = new int[max - min + 1]();
+
+	//统计次数
+	for(int i = 0; i < size; ++i)
+		count[arr[i]]++;
+
+	//改变原有数组
+	int j = 0;
+	for(int i = 0; i < max-min+1; ++i)
+	{
+		while(count[i]-- != 0)
+		{
+			arr[j] = i;
+			++j;
+		}
+	}
+}
+
+int main()
+{
+	int arr[10] = {1,32,123,56,0,99,77,43,12,4444};
+	//int arr[10] = {2,2,123888888,5634343,4343,991312,77323,4332,12323,4444};
+
+	CountingSort(arr,10);
+
+	for(int i = 0; i < sizeof(arr)/sizeof(arr[0]); ++i)
+		cout<<arr[i]<<" " ;
+	cout<<endl;
+
+	system("pause");
+	return 0;
+}
