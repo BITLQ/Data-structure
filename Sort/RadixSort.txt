@@ -1,0 +1,87 @@
+#include<iostream>
+#include<vector>
+
+using namespace std;
+
+//获取最大位数
+int GetMaxBit(int* arr, int size)
+{
+	int count = 1;
+	int num = 10;
+
+	for(int i = 0; i < size; ++i)
+	{
+		while(arr[i] >= num)
+		{
+			count += 1;
+			num *= 10;
+		}
+	}
+	return count;
+}
+
+
+//基数排序
+//时间复杂度接近O(n),但是空间复杂度比较大；
+//基数排序的适用范围很小，只能适用无符号整数的排序；
+void RadixSort(int* arr, const int size)
+{
+	//根据位进行排序
+	//获取最大位数
+	int maxbit = GetMaxBit(arr,size);
+
+	int x = 1;
+	while(maxbit--)
+	{
+		//利用稀疏矩阵的快速转置类似算法
+		int count[10] = {0};   //统计出现次数
+		int start[10] = {0};   //记录开始的位置
+
+		//统计当前位的元素个数
+		//先取余，再取商
+		for(int i = 0; i < size; ++i)
+			count[(arr[i]/x)%10]++;
+
+		//计算每个数应该放的位置；
+		start[0] = 0;
+		for(int i = 1; i < size; ++i)
+			start[i] = start[i-1] + count[i-1];
+
+		//辅助空间
+		int* tmp = new int[size]();
+		//int tmp[10] = {0};
+		//根据start和count将数组顺序重新调整
+		for(int i = 0; i < size; ++i)
+		{  
+			//if(count[(arr[i]/x)%10])
+				tmp[start[(arr[i]/x)%10]++] = arr[i];
+		}
+
+		//将按照当前位排好序的序列覆盖原数组；
+		memcpy(arr,tmp,sizeof(int)*size);
+
+		//下次是更高位
+		x *= 10;
+
+		//释放申请的tmp
+		delete[] tmp;
+	}
+
+	
+}
+
+int main()
+{
+	//int arr[10] = {1,32,123,56,0,99,77,43,12,4444};
+	int arr[10] = {2,2,123888888,5634343,4343,991312,77323,4332,12323,4444};
+
+	RadixSort(arr,10);
+
+	for(int i = 0; i < sizeof(arr)/sizeof(arr[0]); ++i)
+		cout<<arr[i]<<" ";
+	cout<<endl;
+
+	system("pause");
+	return 0;
+}
+
