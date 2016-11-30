@@ -1,0 +1,400 @@
+//4. 求两个节点的最近公共祖先
+//（1）循序渐进的思路，首先了解是否是二叉树，是否是二叉搜索树；
+//（2）如果不是二叉搜索树，了解是否有指向父节点的指针，利用链表求交点的思路求解；
+//（3）如果没有指向父节点的指针，并且是一颗普通的树，可以借用辅助空间，转换为求两个链表
+//的最后公共节点；当然，复杂一点的解法，我觉得可以认为是穷求的暴力求解，就是从根节点开始
+//遍历，判断输入的两个节点是不是当前节点的子节点，如果是，则继续遍历子节点，继续判断，直到
+//所有子节点的子树都没有同时包含这两个节点，则这个节点就是最小公共祖先（可以以普通二叉树为例）；
+
+#include<iostream>
+
+using namespace std;
+
+//按照思路一求解
+//首先得有一颗二叉搜索树,搜索树不是重点，所以只实现需要的部分；
+//struct Node
+//{
+//	int _data;
+//	Node* _left;
+//	Node* _right;
+//
+//	Node(const int& data):_data(data),_left(NULL),_right(NULL){}
+//};
+//
+//class SBTree
+//{
+//public:
+//	SBTree(int* arr,const int size)
+//		:_root(NULL)
+//	{
+//		for(int i = 0; i < size; ++i)
+//			Insert(arr[i]);
+//	}
+//
+//	void Insert(const int data)
+//	{
+//		if(_root == NULL)
+//			_root = new Node(data);
+//		else
+//			_Insert(data);
+//	}	
+//
+//	//查找最小公共祖先
+//    int MinCommonAncestor(int x,int y)
+//	{
+//		Node* cur = _root;
+//		Node* tmp = NULL;
+//
+//		while(cur)
+//		{
+//			if(cur->_data > x && cur->_data > y)
+//			{
+//				tmp = cur;
+//				cur = cur->_left;
+//			}
+//
+//			else if(cur->_data < x && cur->_data < y)
+//			{
+//				tmp = cur;
+//				cur = cur->_right;
+//			}
+//
+//			else if(cur->_data >= x && cur->_data <= y || cur->_data <= x && cur->_data >= y)
+//			{
+//					return cur->_data;
+//			}
+//		}
+//	}
+//
+//protected:
+//	bool _Insert(const int data)
+//	{
+//		Node* cur = _root;
+//		Node* parent = NULL;
+//		while(cur)
+//		{
+//			parent = cur;
+//			if(cur->_data == data)
+//				return false;
+//
+//			if(cur->_data > data)
+//				cur = cur->_left;
+//			else
+//				cur = cur->_right;
+//		}
+//
+//		cur = new Node(data);
+//
+//		if(parent->_data > data)
+//			parent->_left = cur;
+//		else
+//			parent->_right = cur;
+//	}
+//
+//private:
+//	Node* _root;
+//};
+
+
+//第二种情况，不是搜索树，但是有父亲指针；
+
+//struct Node
+//{
+//	int _data;
+//	Node* _left;
+//	Node* _right;
+//	Node* _parent;
+//
+//	Node(const int& data):_data(data),_left(NULL),_right(NULL),_parent(NULL){}
+//};
+//
+//class BinaryTree
+//{
+//	Node* _root;
+//public:
+//	BinaryTree(int* arr,size_t size)
+//	{
+//		int index = 0;
+//		Node* parent = NULL;
+//		_root = _GreatTree(arr,size,'#',index,parent);
+//	}
+//
+//	//前序递归建树
+//	Node* _GreatTree(int* arr, int size,int invalid, int& index,Node* parent)
+//	{
+//		Node* root = NULL;
+//		if(index < size && arr[index] != invalid)
+//		{
+//			root = new Node(arr[index]);
+//			root->_parent = parent;
+//			root->_left = _GreatTree(arr,size,invalid,++index,root);
+//			root->_right = _GreatTree(arr,size,invalid,++index,root);
+//		}
+//		return root;
+//	}
+//
+//	//查找最小公共祖先
+//    int MinCommonAncestor(int x,int y)
+//	{
+//		//根据已知节点向上查找到根节点，求两个链表的第一个交点
+//		//前提都是建立在没有重复元素的二叉树中
+//
+//		if(x == y)
+//			return x;
+//
+//		//不考虑返回空的情况，即暂时不考虑非法输入
+//		Node* nodeone = NULL;
+//		_FindNode(_root,x,nodeone);
+//		Node* nodetwo = NULL;
+//		_FindNode(_root,y,nodetwo);
+//		
+//		//采用找两个链表第一个公共节点的方法求解，三种方法，穷举，辅助栈，和求长度差；
+//		//利用第三种方法
+//
+//		int count1 = 1;
+//		int count2 = 1;
+//		Node* tmp = nodeone;
+//
+//		while(tmp->_parent)
+//		{
+//			++count1;
+//			tmp = tmp->_parent;
+//		}
+//		tmp = nodetwo;
+//
+//		while(tmp->_parent)
+//		{
+//			++count2;
+//			tmp = tmp->_parent;
+//		}
+//
+//		//求出长度差
+//	
+//
+//		int len = abs(count1 - count2);
+//		if(count1 >= count2)
+//			return _FindFirstNode(nodeone,nodetwo,len);
+//		else
+//			return _FindFirstNode(nodeone,nodetwo,len);
+//	}
+//protected:
+//	int _FindFirstNode(Node* one,Node* two, int len)
+//	{
+//		while(len--)
+//			one = one->_parent;
+//
+//		while(one != two)
+//		{
+//			one = one->_parent;
+//			two = two->_parent;
+//		}
+//
+//		return one->_data;
+//	}
+//
+//	//寻找节点
+//	void  _FindNode(Node* root,const int data,Node*& node)
+//	{
+//		//前序遍历，深度优先遍历
+//		if(root == NULL)
+//			return;
+//
+//		if(root->_data == data)
+//			node = root;
+//
+//		 _FindNode(root->_left,data,node);
+//		 _FindNode(root->_right,data,node);
+//	}
+//};
+
+//第三种情况，普通二叉树，没有父亲指针；
+//利用递归
+
+//struct Node
+//{
+//	int _data;
+//	Node* _left;
+//	Node* _right;
+//
+//	Node(const int& data):_data(data),_left(NULL),_right(NULL){}
+//};
+//
+//class BinaryTree
+//{
+//	Node* _root;
+//public:
+//	BinaryTree(int* arr,size_t size)
+//	{
+//		int index = 0;
+//		_root = _GreatTree(arr,size,'#',index);
+//	}
+//
+//	//前序递归建树
+//	Node* _GreatTree(int* arr, int size,int invalid, int& index)
+//	{
+//		Node* root = NULL;
+//		if(index < size && arr[index] != invalid)
+//		{
+//			root = new Node(arr[index]);
+//			root->_left = _GreatTree(arr,size,invalid,++index);
+//			root->_right = _GreatTree(arr,size,invalid,++index);
+//		}
+//		return root;
+//	}
+//
+//	int MinCommonAncestor(int x,int y)
+//	{
+//		Node* left = NULL;
+//		Node* right = NULL;
+//
+//		Node* cur = _MinCommonAncestor(_root,x,y);
+//		return cur->_data;
+//	}
+//	
+//protected:
+//	Node* _MinCommonAncestor(Node* root,const int x, const int y)
+//	{
+//		Node* left = NULL;
+//		Node* right = NULL;
+//
+//		if(root == NULL)
+//			return NULL;
+//
+//		if(root->_data == x || root->_data == y)
+//			return root;
+//
+//		left = _MinCommonAncestor(root->_left,x,y);
+//		right = _MinCommonAncestor(root->_right,x,y);
+//
+//		if(left && right)
+//			return root;
+//
+//		return left ? left : right;
+//	}
+//};
+
+//普通的树，没有父亲指针，利用栈保存路径
+//还是以二叉树为例
+#include<stack>
+
+struct Node
+{
+	int _data;
+	Node* _left;
+	Node* _right;
+
+	Node(const int& data):_data(data),_left(NULL),_right(NULL){}
+};
+
+class BinaryTree
+{
+	Node* _root;
+public:
+	BinaryTree(int* arr,size_t size)
+	{
+		int index = 0;
+		_root = _GreatTree(arr,size,'#',index);
+	}
+
+	//前序递归建树
+	Node* _GreatTree(int* arr, int size,int invalid, int& index)
+	{
+		Node* root = NULL;
+		if(index < size && arr[index] != invalid)
+		{
+			root = new Node(arr[index]);
+			root->_left = _GreatTree(arr,size,invalid,++index);
+			root->_right = _GreatTree(arr,size,invalid,++index);
+		}
+		return root;
+	}
+
+	//利用递归和栈保存路径，然后消去两条路径的差值，进行同时pop();找到第一对不同；
+
+	int MinCommonAncestor(int x,int y)
+	{
+		stack<Node*> s1;
+		_MinCommonAncestor(_root,s1,x);
+		stack<Node*> s2;
+		_MinCommonAncestor(_root,s2,y);
+
+		if(s1.size() > s2.size())
+		{
+			int count = s1.size() - s2.size();
+			return FindCommonParent(s1,s2,count)->_data;
+		}
+
+		int count = s2.size() - s1.size();
+		return FindCommonParent(s2,s1,count)->_data;
+	}
+
+protected:
+	Node* FindCommonParent(stack<Node*> first,stack<Node*> second,int count)
+	{
+		while(count--)
+			first.pop();
+
+		Node* cur = NULL;
+
+		while(!first.empty() && !second.empty() && first.top() != second.top())
+		{
+			first.pop();
+			second.pop();
+		}
+
+		return first.top();
+	}
+
+	bool _MinCommonAncestor(Node* root,stack<Node*>& s, const int x)
+	{
+		if(root == NULL)
+			return false;
+
+		if(root->_data == x)
+		{
+			s.push(root);
+			return true;
+		}
+
+		s.push(root);
+
+		bool left = _MinCommonAncestor(root->_left,s,x);
+		bool right = _MinCommonAncestor(root->_right,s,x);
+
+		if(left == false && right == false)
+		{
+			s.pop();
+			return false;
+		}
+
+		return true;
+	}
+};
+
+int main()
+{
+	/*int arr[10] = {2,5,9,0,1,3,6,7,8,4,};
+	SBTree tree(arr,10);*/
+
+	//cout<<"最小公共祖先为:"<<tree.MinCommonAncestor(0,0)<<endl;;
+
+	/*int arr[] = {1,2,3,'#','#',4,'#','#',5,6,'#','#','#'};
+	BinaryTree tree(arr,13);
+
+	cout<<tree.MinCommonAncestor(3,2)<<endl;*/
+
+    //  int arr[] = {1,2,3,'#','#','#',5,6,'#','#','#'};
+
+	//int arr[] = {1,2,3,'#','#',4,'#','#',5,6,'#','#','#'};
+	//BinaryTree tree(arr,13);
+
+	//cout<<tree.MinCommonAncestor(4,5)<<endl;
+
+	int arr[] = {1,2,3,'#','#',4,'#','#',5,6,'#','#','#'};
+	BinaryTree tree(arr,13);
+
+	cout<<tree.MinCommonAncestor(2,3)<<endl;
+
+	system("pause");
+	return 0;
+}
