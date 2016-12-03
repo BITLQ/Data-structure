@@ -121,7 +121,7 @@ class GraphLink
 public:
 	typedef GraphNode<V,W> Node;
 
-	GraphLink(V* arr,const size_t size, int isDirection = -1)
+	GraphLink(V* arr,const size_t size, bool isDirection = 0/*int isDirection = 0*/)
 		:_isDirection(isDirection)
 	{
 		_vartix.resize(size);
@@ -148,7 +148,7 @@ public:
 		
 		_AddEdge(srcIndex,destIndex,w);
 
-		if(_isDirection == -1)
+		if(!_isDirection)
 			_AddEdge(destIndex,srcIndex,w);
 
 	}
@@ -244,6 +244,7 @@ public:
 
 	vector<V> _vartix;
 	vector<Node*> _edgetable;
-	int _isDirection;
+	//int _isDirection;
+	bool _isDirection;
 	//bool _isDirection;  为什么无论怎么都是ture;
 };
