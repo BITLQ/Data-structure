@@ -1,0 +1,236 @@
+//最小生成树的两种算法
+//克鲁斯卡尔 && 普里姆
+#pragma once
+#include "Graph.h"
+#include<algorithm>
+
+//难点在于判环
+//选出一条具有最小权值，且两端点不在同一个集合中（保证不构成回路），则加入生成树
+
+//克鲁斯卡尔需要并查集解决
+/*最小生成树(无向图)
+
+连通图由N个顶点组成，生成树必须含有N个顶点、N-1条边。
+
+1. 只能用连通图的边来构造最小生成树 
+2. 只能恰好用N-1条边来联结图中的顶点 
+3. 选用的这N-1条边不能构成回路
+
+构造最小生成树的方法，Kruskal算法和Prim算法，这两个算法都采用逐步求解的贪心算法策略*/
+
+//第一步：先得有一个无向连通图
+//第二步：每次找最小的边，并且加入这条边的话不会构成环；
+//第三步：判环
+
+//需要建一个堆，每次取最小的边
+//仿函数
+template<class V,class W>
+bool Compare(GraphNode<V,W>* p1,GraphNode<V,W>* p2)
+{
+	return (p1->_w > p2->_w);
+}
+//struct Compare
+//{
+//	bool operator()(GraphNode<V,W>* p1,GraphNode<V,W>* p2)
+//	{
+//		return (p1->_w > p2->_w);
+//	}
+//};
+
+template<class V,class W>
+class MinTree
+{
+public:
+	typedef GraphNode<V,W> Node;
+
+	MinTree(const GraphLink<V,W>& tmp)
+		:_minTree(tmp)
+	{}
+
+	//克鲁斯卡尔最小生成树
+	void KruskalMakeMinTree()
+	{
+		//首先得是无向图
+		if(_minTree._isDirection != -1)
+			throw -1;
+
+		vector<Node*> v;
+		vector<int> state;
+		int size = _minTree._vartix.size();
+		
+		//利用并查集的集合，判环；
+		vector<int> Union;
+	
+		for(int i = 0; i < size; ++i)
+		{
+			state.push_back(0);
+			Union.push_back(-1);
+		}
+
+		//为了方便使用，暂时牺牲一下GraphLink的封装；
+		for(int i = 0; i < size; ++i)
+		{
+			Node* cur = _minTree._edgetable[i];
+			while(cur)
+			{
+				if(state[cur->_dest] == 0)
+					v.push_back(cur);
+				cur = cur->_next;
+			}
+			state[i] = 1;
+		}
+		//建堆
+		make_heap(v.begin(),v.end(),Compare<V,W>);
+		Node* head = v.front();    //为遍历方便；
+
+		//sort(v.begin(),v.end(),Compare<V,W>());
+		//利用并查集
+		//n - 1条边，所以 i < size-1；
+		
+		for(int i = 0; i < size; ++i)
+				_minTree._edgetable[i] = NULL;
+
+		for(int i = 0; i < size - 1; ++i)
+		{
+			if(v.empty())
+				throw -1;;
+
+			while(!_JudgeRing(Union,v.front()))
+			{
+				pop_heap(v.begin(),v.end(),Compare<V,W>);
+				v.pop_back();
+			}
+			pop_heap(v.begin(),v.end(),Compare<V,W>);
+			v.pop_back();
+		}
+		DisPlay(head);
+	}
+
+	//普里姆最小生成树
+	void PrimMakeMinTree()
+	{
+		//普里姆算法找最小权值边是按照局部最优
+		//如果
+
+		if(_minTree._isDirection != -1)
+			throw -1;
+
+		vector<Node*> v;
+		vector<int> state;
+		GraphLink<V,W> tmp(_minTree);
+		int size = _minTree._vartix.size();
+
+		for(int i = 0; i < size; ++i)
+		{
+			tmp._edgetable[i] = NULL;
+			state.push_back(0);
+		}
+
+		//为了方便使用，暂时牺牲一下GraphLink的封装；
+		//从0开始寻找最小生成树
+		
+		Node* cur = _minTree._edgetable[0];
+		//make_heap(v.begin(),v.end(),Compare<V,W>);
+
+		for(int i = 0; i < size - 1; ++i)
+		{
+			if(v.size() == 0)
+				throw -1;
+
+			state[cur->_src] = 1;
+			while(cur)
+			{
+				if(state[cur->_dest] == 0)
+				{
+					v.push_back(cur);
+					push_heap(v.begin(),v.end(),Compare<V,W>);
+				}
+				cur = cur->_next;
+			}
+			
+			cur = v.front();
+			tmp.AddEdge(cur->_src,cur->_dest,cur->_w);
+
+			cur = _minTree._edgetable[cur->_dest];
+			pop_heap(v.begin(),v.end(),Compare<V,W>);
+			v.pop_back();	
+		}
+		_minTree._edgetable = tmp._edgetable;
+		DisPlay(_minTree._edgetable[0]);
+	}
+
+	void DisPlay(Node* head)
+	{
+		cout<<"最小生成树:"<<endl;
+		_minTree.BFS(head->_src);
+		_minTree.DFS(head->_src);
+	}
+
+protected:
+	int _FindAscetor(const vector<int>& Union,int x)
+	{
+		int index = x;
+		while(Union[index] >= 0)
+			index = Union[index];
+
+		return index;
+	}
+
+	bool _JudgeRing(vector<int>& Union, Node* cur)
+	{
+		//vector<int> tmp = Union;
+
+		//找祖先，判断是否成环
+		int Ascetor1 = _FindAscetor(Union,cur->_src);
+		int Ascetor2 = _FindAscetor(Union,cur->_dest);
+		if( Ascetor1 == Ascetor2)
+			return false;
+
+		//不是一个集合，则可以加入
+		Union[Ascetor1] += Union[Ascetor2];
+
+		if(Ascetor2 == cur->_dest)
+			Union[cur->_dest] = Ascetor1;
+
+		_minTree.AddEdge(cur->_src,cur->_dest,cur->_w);
+		return true;
+	}
+private:
+	GraphLink<V,W> _minTree; 
+};
+
+int main()
+{
+	int arr[] = {0,1,2,3,4,5,6};
+	//正常输入
+	GraphLink<int, int> g(arr,7);
+	//异常输入
+	//GraphLink<int, int> g(arr,7,3);
+	
+	g.AddEdge(0,1,28);
+	g.AddEdge(0,5,10);
+	g.AddEdge(1,6,14);
+	g.AddEdge(1,2,16);
+	g.AddEdge(3,2,12);
+	g.AddEdge(3,6,18);
+
+	//如将顶点4孤立起来，即以下三句屏蔽掉，会触发缺边异常
+	g.AddEdge(3,4,22);
+	g.AddEdge(4,6,24);
+	g.AddEdge(5,4,25);
+
+	MinTree<int,int> mintree(g);
+
+	try
+	{
+		//mintree.KruskalMakeMinTree();
+		mintree.PrimMakeMinTree();
+	}
+	catch(...)
+	{
+		cout<<"input error"<<endl;
+	}
+	
+	system("pause");
+	return 0;
+}
