@@ -51,7 +51,7 @@ public:
 	void KruskalMakeMinTree()
 	{
 		//首先得是无向图
-		if(_minTree._isDirection != -1)
+		if(_minTree._isDirection)
 			throw -1;
 
 		vector<Node*> v;
@@ -112,7 +112,7 @@ public:
 		//普里姆算法找最小权值边是按照局部最优
 		//如果
 
-		if(_minTree._isDirection != -1)
+		if(_minTree._isDirection)
 			throw -1;
 
 		vector<Node*> v;
@@ -134,9 +134,6 @@ public:
 
 		for(int i = 0; i < size - 1; ++i)
 		{
-			if(v.size() == 0)
-				throw -1;
-
 			state[cur->_src] = 1;
 			while(cur)
 			{
@@ -148,12 +145,16 @@ public:
 				cur = cur->_next;
 			}
 			
+
 			cur = v.front();
 			tmp.AddEdge(cur->_src,cur->_dest,cur->_w);
 
 			cur = _minTree._edgetable[cur->_dest];
 			pop_heap(v.begin(),v.end(),Compare<V,W>);
 			v.pop_back();	
+			
+			if(v.empty())
+				throw -1;
 		}
 		_minTree._edgetable = tmp._edgetable;
 		DisPlay(_minTree._edgetable[0]);
