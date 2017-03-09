@@ -1,5 +1,3 @@
-# Data-structure
-data   structure
 
 //HuffmanTree.h
 
